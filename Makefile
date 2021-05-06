@@ -19,3 +19,6 @@ lint:
 
 clean:
 	rm -rf $(BUILDDIR)
+
+tidy:
+	go mod tidy
