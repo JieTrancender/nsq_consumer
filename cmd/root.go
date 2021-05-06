@@ -84,7 +84,3 @@ func Execute() {
 func logFatal(f string, args ...interface{}) {
 	lg.LogFatal("[nsq_consumer] ", f, args...)
 }
-
-func logInfo(f string, args ...interface{}) {
-	lg.LogInfo("[nsq_consumer] ", f, args...)
-}

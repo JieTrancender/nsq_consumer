@@ -29,7 +29,7 @@ func NewNsqConsumer(opts *Options) (*NsqConsumer, error) {
 	}
 
 	consumer.swapOpts(opts)
-	consumer.errValue.Store(errStore{})
+	consumer.errValue.Store(errStore{err: nil})
 
 	return consumer, nil
 }
