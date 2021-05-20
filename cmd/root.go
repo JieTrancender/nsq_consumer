@@ -1,86 +1,87 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
-	"os/signal"
-	"path/filepath"
-	"sync"
-	"syscall"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
-	"github.com/JieTrancender/nsq_to_consumer/nsq_consumer"
-
-	"github.com/judwhite/go-svc"
+	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
-type program struct {
-	once     sync.Once
-	consumer *nsq_consumer.NsqConsumer
+const Name = "nsqConsumer"
+
+type NsqConsumerRootCmd struct {
+	cobra.Command
+	RunCmd *cobra.Command
 }
 
-var rootCmd = &cobra.Command{
-	Use:   "kbm",
-	Short: "kbm means keyboard man service.",
-	Run: func(cmd *cobra.Command, args []string) {
-		prg := &program{}
-		if err := svc.Run(prg, syscall.SIGINT); err != nil {
-			logFatal("%s", err)
-		}
-	},
-}
+var (
+	RootCmd *NsqConsumerRootCmd
+)
 
-func (p *program) Init(env svc.Environment) error {
-	if env.IsWindowsService() {
-		dir := filepath.Dir(os.Args[0])
-		return os.Chdir(dir)
-	}
-	return nil
-}
-
-func (p *program) Start() error {
-	opts := nsq_consumer.NewOptions()
-	consumer, err := nsq_consumer.NewNsqConsumer(opts)
-	if err != nil {
-		logFatal("new nsq consumer fail, err: %s", err)
-	}
-	p.consumer = consumer
-
-	signalChan := make(chan os.Signal, 1)
-	go func() {
-		for range signalChan {
-			p.once.Do(func() {
-				p.consumer.Exit()
-			})
-		}
-	}()
-	signal.Notify(signalChan, syscall.SIGTERM)
-
-	go func() {
-		err := p.consumer.Main()
-		if err != nil {
-			_ = p.Stop()
-			os.Exit(1)
-		}
-	}()
-
-	return nil
-}
-
-func (p *program) Stop() error {
-	p.once.Do(func() {
-		p.consumer.Exit()
-	})
-	return nil
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		logFatal("execute fail, err: %v", err)
+func NsqConsumerSettings() instance.Settings {
+	var runFlags = pflag.NewFlagSet(Name, pflag.ExitOnError)
+	runFlags.BoolP("version", "v", false, "show version")
+	runFlags.StringArray("etcd-endpoints", []string{"127.0.0.1:2379"}, "etcd endpoints(may be given multi time)")
+	runFlags.String("etcd-path", "/config/nsq_consumer/default", "etcd path")
+	runFlags.String("etcd-username", "root", "etcd username")
+	runFlags.String("etcd-password", "root", "etcd password")
+	return instance.Settings{
+		RunFlags: runFlags,
+		Name:     Name,
 	}
 }
 
-func logFatal(f string, args ...interface{}) {
-	lg.LogFatal("[nsq_consumer] ", f, args...)
+func NsqConsumer(settings instance.Settings) *NsqConsumerRootCmd {
+	command := genRootCmdWithSettings(settings)
+	return command
+}
+
+func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
+	if settings.IndexPrefix == "" {
+		settings.IndexPrefix = settings.Name
+	}
+
+	rootCmd := &NsqConsumerRootCmd{}
+	rootCmd.Use = settings.Name
+
+	rootCmd.RunCmd = genRunCmd(settings)
+
+	// Root command is an alias for run
+	rootCmd.Run = rootCmd.RunCmd.Run
+
+	rootCmd.Flags().AddFlagSet(rootCmd.RunCmd.Flags())
+
+	// Register subcommands common to all consumers
+	rootCmd.AddCommand(rootCmd.RunCmd)
+
+	return rootCmd
+}
+
+func genRunCmd(settings instance.Settings) *cobra.Command {
+	name := settings.Name
+	runCmd := cobra.Command{
+		Use:   "run",
+		Short: "Run " + name,
+		Run: func(cmd *cobra.Command, args []string) {
+			isVersion, _ := cmd.Flags().GetBool("version")
+			if isVersion {
+				fmt.Println("version: v0.0.1")
+				os.Exit(0)
+			}
+
+			err := instance.Run(settings)
+			if err != nil {
+				os.Exit(1)
+			}
+		},
+	}
+
+	if settings.RunFlags != nil {
+		runCmd.Flags().AddFlagSet(settings.RunFlags)
+	}
+
+	return &runCmd
 }
