@@ -1,11 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
-	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -49,7 +45,7 @@ func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
 	rootCmd := &NsqConsumerRootCmd{}
 	rootCmd.Use = settings.Name
 
-	rootCmd.RunCmd = genRunCmd(settings)
+	rootCmd.RunCmd = GenRunCmd(settings)
 	rootCmd.VersionCmd = GenVersionCmd(settings)
 
 	// Root command is an alias for run
@@ -62,30 +58,4 @@ func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
 	rootCmd.AddCommand(rootCmd.VersionCmd)
 
 	return rootCmd
-}
-
-func genRunCmd(settings instance.Settings) *cobra.Command {
-	name := settings.Name
-	runCmd := cobra.Command{
-		Use:   "run",
-		Short: "Run " + name,
-		Run: func(cmd *cobra.Command, args []string) {
-			isVersion, _ := cmd.Flags().GetBool("version")
-			if isVersion {
-				fmt.Println(version.String())
-				os.Exit(0)
-			}
-
-			err := instance.Run(settings)
-			if err != nil {
-				os.Exit(1)
-			}
-		},
-	}
-
-	if settings.RunFlags != nil {
-		runCmd.Flags().AddFlagSet(settings.RunFlags)
-	}
-
-	return &runCmd
 }
