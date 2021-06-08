@@ -3,7 +3,8 @@ package instance
 import "time"
 
 type Config struct {
-	ConsumerName         string        `json:"consumer_name"`
+	ConsumerName         string        `json:"consumer-name"`
+	IndexPrefix          string        `json:"index-prefix"`
 	LookupdHTTPAddresses []string      `json:"lookupd-http-addresses"`
 	NsqdTCPAddresses     []string      `json:"nsqd-tcp-addresses"`
 	Topics               []string      `json:"topics"`

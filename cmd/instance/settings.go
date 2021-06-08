@@ -8,4 +8,5 @@ type Settings struct {
 	Version     string
 
 	RunFlags *pflag.FlagSet
+	Config   *Config
 }

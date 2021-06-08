@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
+	"github.com/JieTrancender/nsq_to_consumer/internal/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 	"github.com/spf13/cobra"
 )
 
-func GenRunCmd(settings instance.Settings) *cobra.Command {
+func GenRunCmd(settings instance.Settings, ct consumer.Creator) *cobra.Command {
 	name := settings.Name
 	runCmd := cobra.Command{
 		Use:   "run",
@@ -21,7 +22,7 @@ func GenRunCmd(settings instance.Settings) *cobra.Command {
 				os.Exit(0)
 			}
 
-			err := instance.Run(settings)
+			err := instance.Run(settings, ct)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

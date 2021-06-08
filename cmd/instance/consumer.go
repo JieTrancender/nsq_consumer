@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/app"
-	"github.com/JieTrancender/nsq_to_consumer/internal/consumer"
-	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 	"go.etcd.io/etcd/clientv3"
+
+	"github.com/JieTrancender/nsq_to_consumer/internal/app"
+	"github.com/JieTrancender/nsq_to_consumer/internal/common"
+	"github.com/JieTrancender/nsq_to_consumer/internal/consumer"
+	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
+	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 )
 
 var etcdEndpoints = app.StringArray{}
@@ -19,10 +23,9 @@ var etcdEndpoints = app.StringArray{}
 type Consumer struct {
 	consumer.ConsumerEntity
 
-	Config consumerConfig
-}
-
-type consumerConfig struct {
+	Config    *Config
+	RawConfig *common.Config // Raw config that can be unpacked to get Beat specific config data.
+	etcdCli   *clientv3.Client
 }
 
 func init() {
@@ -30,7 +33,7 @@ func init() {
 	fs.Var(&etcdEndpoints, "etcd-endpoints", "etcd endpoint, may be given multi times")
 }
 
-func Run(settings Settings) error {
+func Run(settings Settings, ct consumer.Creator) error {
 	etcdEndpoints, _ := settings.RunFlags.GetStringArray("etcd-endpoints")
 	etcdPath, _ := settings.RunFlags.GetString("etcd-path")
 	etcdUsername, _ := settings.RunFlags.GetString("etcd-username")
@@ -89,7 +92,16 @@ func Run(settings Settings) error {
 	}
 
 	fmt.Printf("config:%v\n", *config)
-	return nil
+
+	c, err := NewConsumer(config.ConsumerName, config.IndexPrefix, "")
+	if err != nil {
+		return err
+	}
+
+	c.etcdCli = etcdCli
+	c.Config = config
+
+	return c.launch(settings, ct)
 }
 
 func NewConsumer(name, indexPrefix, v string) (*Consumer, error) {
@@ -110,4 +122,84 @@ func NewConsumer(name, indexPrefix, v string) (*Consumer, error) {
 	}
 
 	return &Consumer{ConsumerEntity: c}, nil
+}
+
+// ConsumerConfig returns config section for this consumer
+func (c *Consumer) ConsumerConfig() (*common.Config, error) {
+	configName := strings.ToLower(c.Info.Consumer)
+	if c.RawConfig.HasField(configName) {
+		sub, err := c.RawConfig.Child(configName, -1)
+		if err != nil {
+			return nil, err
+		}
+
+		return sub, nil
+	}
+
+	fmt.Println("ConsumerConfig", configName)
+	return common.NewConfig(), nil
+}
+
+func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error) {
+	sub, err := c.ConsumerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	lg.LogInfo("NsqConsumer", "Setup Consumer: %s, Version: %s", c.Info.Consumer, c.Info.Version)
+
+	consumer, err := ct(&c.ConsumerEntity, sub)
+	if err != nil {
+		return nil, err
+	}
+
+	return consumer, nil
+}
+
+// handleFlags parses the command line flags
+func (c *Consumer) handleFlags() error {
+	// flag.Parse()
+	return nil
+}
+
+// configure reads the etcd config, parses the common options defined in ConsumerConfig, initializes logging
+func (c *Consumer) configure(settings Settings) error {
+	cfg, err := common.NewConfigFrom(settings.Config)
+	if err != nil {
+		return err
+	}
+
+	c.RawConfig = cfg
+
+	return nil
+}
+
+// InitWithSettings does initialization of things common to all actions (read etcd config, flags)
+func (c *Consumer) InitWithSettings(settings Settings) error {
+	err := c.handleFlags()
+	if err != nil {
+		return err
+	}
+
+	if err := c.configure(settings); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
+	defer lg.LogInfo("NsqConsumer", "%s stopped", c.Info.Consumer)
+
+	err := c.InitWithSettings(settings)
+	if err != nil {
+		return err
+	}
+
+	consumer, err := c.createConsumer(ct)
+	if err != nil {
+		return err
+	}
+
+	return consumer.Run(&c.ConsumerEntity)
 }
