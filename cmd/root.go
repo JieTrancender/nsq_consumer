@@ -5,16 +5,18 @@ import (
 	"os"
 
 	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
+	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-const Name = "nsqConsumer"
+const Name = "NsqConsumer"
 
 type NsqConsumerRootCmd struct {
 	cobra.Command
-	RunCmd *cobra.Command
+	RunCmd     *cobra.Command
+	VersionCmd *cobra.Command
 }
 
 var (
@@ -48,6 +50,7 @@ func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
 	rootCmd.Use = settings.Name
 
 	rootCmd.RunCmd = genRunCmd(settings)
+	rootCmd.VersionCmd = GenVersionCmd(settings)
 
 	// Root command is an alias for run
 	rootCmd.Run = rootCmd.RunCmd.Run
@@ -56,6 +59,7 @@ func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
 
 	// Register subcommands common to all consumers
 	rootCmd.AddCommand(rootCmd.RunCmd)
+	rootCmd.AddCommand(rootCmd.VersionCmd)
 
 	return rootCmd
 }
@@ -68,7 +72,7 @@ func genRunCmd(settings instance.Settings) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			isVersion, _ := cmd.Flags().GetBool("version")
 			if isVersion {
-				fmt.Println("version: v0.0.1")
+				fmt.Println(version.String())
 				os.Exit(0)
 			}
 
