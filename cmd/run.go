@@ -23,6 +23,7 @@ func GenRunCmd(settings instance.Settings) *cobra.Command {
 
 			err := instance.Run(settings)
 			if err != nil {
+				fmt.Println(err)
 				os.Exit(1)
 			}
 		},
