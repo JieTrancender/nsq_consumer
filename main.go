@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// cmd.Execute()
 	if err := cmd.NsqConsumer(cmd.NsqConsumerSettings()).Execute(); err != nil {
 		os.Exit(1)
 	}
