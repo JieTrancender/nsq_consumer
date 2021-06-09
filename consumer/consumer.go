@@ -43,7 +43,31 @@ func newTailConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (cons
 	return tc, nil
 }
 
+type etcdConfig struct {
+	LookupdHTTPAddresses []string `config:"lookupd-http-addresses"`
+	Topics               []string `config:"topics"`
+}
+
+func (tc *TailConsumer) updateTopics(etcdConfig *etcdConfig) {
+
+}
+
 func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
+	fmt.Println(c.Info)
+	fmt.Println(c.Config)
+	fmt.Println(c.ConsumerConfig)
+	fmt.Println(c.ConsumerConfig.GetFields())
+
+	etcdConfig := &etcdConfig{}
+
+	err := c.ConsumerConfig.Unpack(etcdConfig)
+	if err != nil {
+		return err
+	}
+
+	c.updateTopics(etcdConfig)
+	fmt.Println("~~~~~etcdConfig", *etcdConfig)
+
 	lg.LogInfo("TailConsumer", "run...")
 	return nil
 }
