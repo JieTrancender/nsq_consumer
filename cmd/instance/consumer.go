@@ -108,7 +108,7 @@ func Run(settings Settings, ct consumer.Creator) error {
 
 	// fmt.Printf("config:%v\n", *config)
 
-	c, err := NewConsumer("NsqConsumer", "", "")
+	c, err := NewConsumer(settings.Name, settings.Name, "")
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,6 @@ func (c *Consumer) configure(settings Settings) error {
 	etcdPath, _ := settings.RunFlags.GetString("etcd-path")
 	etcdUsername, _ := settings.RunFlags.GetString("etcd-username")
 	etcdPassword, _ := settings.RunFlags.GetString("etcd-password")
-	fmt.Printf("etcd(%v):%s %s:%s version(%s)\n", etcdEndpoints, etcdPath, etcdUsername, etcdPassword, version.GetDefaultVersion())
 
 	etcdCli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdEndpoints,
@@ -205,7 +204,6 @@ func (c *Consumer) configure(settings Settings) error {
 
 	config := make(map[string]interface{})
 	for _, ev := range resp.Kvs {
-		fmt.Printf("range %s %s\n", string(ev.Key), string(etcdPath))
 		if string(ev.Key) == etcdPath {
 			err := json.Unmarshal(ev.Value, &config)
 			if err != nil {

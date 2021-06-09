@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const Name = "NsqConsumer"
+const Name = "nsq-consumer"
 
 type NsqConsumerRootCmd struct {
 	cobra.Command
