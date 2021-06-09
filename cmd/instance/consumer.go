@@ -196,6 +196,7 @@ func (c *Consumer) configure(settings Settings) error {
 		return err
 	}
 
+	c.etcdCli = etcdCli
 	kv := clientv3.NewKV(etcdCli)
 	resp, err := kv.Get(context.Background(), etcdPath)
 	if err != nil {
@@ -240,6 +241,10 @@ func (c *Consumer) configure(settings Settings) error {
 	}
 
 	c.ConsumerEntity.ConsumerConfig, err = c.ConsumerConfig()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
