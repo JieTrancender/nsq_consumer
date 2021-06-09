@@ -67,3 +67,7 @@ func (ns *ConfigNamespace) Config() *Config {
 func (ns *ConfigNamespace) IsSet() bool {
 	return ns.config != nil
 }
+
+func (c *Config) String(name string, idx int) (string, error) {
+	return c.access().String(name, idx, configOpts...)
+}
