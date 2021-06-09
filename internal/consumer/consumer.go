@@ -15,4 +15,14 @@ type Consumer interface {
 
 type ConsumerEntity struct {
 	Info Info
+
+	Config *ConsumerConfig
+
+	ConsumerConfig *common.Config
+}
+
+// ConsumerConfig struct contains the basic configuration of every consumer
+type ConsumerConfig struct {
+	// output/publishing related configurations
+	Output common.ConfigNamespace `config:"output"`
 }

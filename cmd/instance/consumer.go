@@ -23,9 +23,23 @@ var etcdEndpoints = app.StringArray{}
 type Consumer struct {
 	consumer.ConsumerEntity
 
-	Config    *Config
+	Config    consumerConfig
 	RawConfig *common.Config // Raw config that can be unpacked to get Beat specific config data.
 	etcdCli   *clientv3.Client
+}
+
+type consumerConfig struct {
+	consumer.ConsumerConfig
+
+	// instance internal configs
+
+	// consumer top-level settings
+	Name                 string   `config:"consumer-name"`
+	LookupdHTTPAddresses []string `config:"lookupd-http-addresses"`
+	Topics               []string `config:"topics"`
+	Type                 string   `config:"consumer-type"`
+
+	Output *common.Config `config:"output"`
 }
 
 func init() {
@@ -34,72 +48,74 @@ func init() {
 }
 
 func Run(settings Settings, ct consumer.Creator) error {
-	etcdEndpoints, _ := settings.RunFlags.GetStringArray("etcd-endpoints")
-	etcdPath, _ := settings.RunFlags.GetString("etcd-path")
-	etcdUsername, _ := settings.RunFlags.GetString("etcd-username")
-	etcdPassword, _ := settings.RunFlags.GetString("etcd-password")
-	fmt.Printf("etcd(%v):%s %s:%s version(%s)\n", etcdEndpoints, etcdPath, etcdUsername, etcdPassword, version.GetDefaultVersion())
+	// etcdEndpoints, _ := settings.RunFlags.GetStringArray("etcd-endpoints")
+	// etcdPath, _ := settings.RunFlags.GetString("etcd-path")
+	// etcdUsername, _ := settings.RunFlags.GetString("etcd-username")
+	// etcdPassword, _ := settings.RunFlags.GetString("etcd-password")
+	// fmt.Printf("etcd(%v):%s %s:%s version(%s)\n", etcdEndpoints, etcdPath, etcdUsername, etcdPassword, version.GetDefaultVersion())
 
-	etcdCli, err := clientv3.New(clientv3.Config{
-		Endpoints:   etcdEndpoints,
-		DialTimeout: 5 * time.Second,
-		Username:    etcdUsername,
-		Password:    etcdPassword,
-	})
+	// etcdCli, err := clientv3.New(clientv3.Config{
+	// 	Endpoints:   etcdEndpoints,
+	// 	DialTimeout: 5 * time.Second,
+	// 	Username:    etcdUsername,
+	// 	Password:    etcdPassword,
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	// kv := clientv3.NewKV(etcdCli)
+	// resp, err := kv.Get(context.Background(), etcdPath)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// isConfig := false
+	// // var jsonData []byte
+	// var config = newConfig()
+	// for _, ev := range resp.Kvs {
+	// 	fmt.Printf("range %s %s\n", string(ev.Key), string(etcdPath))
+	// 	if string(ev.Key) == etcdPath {
+	// 		// todo: schema check
+	// 		err := json.Unmarshal(ev.Value, config)
+	// 		if err != nil {
+	// 			return fmt.Errorf("invalid config format: %s %v", string(ev.Value), err)
+	// 		}
+
+	// 		isConfig = true
+	// 	}
+	// }
+
+	// if !isConfig {
+	// 	return fmt.Errorf("Config is not exist in path %s", etcdPath)
+	// }
+
+	// if config.ConsumerName == "" {
+	// 	return fmt.Errorf("Config is invalid, consumer_name is required")
+	// }
+
+	// if len(config.LookupdHTTPAddresses) == 0 && len(config.NsqdTCPAddresses) == 0 {
+	// 	return fmt.Errorf("Config is invalid, lookupd-http-address or nsqd-tcp-address is required")
+	// }
+
+	// if len(config.LookupdHTTPAddresses) != 0 && len(config.NsqdTCPAddresses) != 0 {
+	// 	return fmt.Errorf("Config is invalid, use lookupd-http-address or nsqd-tcp-address, not both")
+	// }
+
+	// if len(config.Topics) == 0 {
+	// 	return fmt.Errorf("Config is invalid, topic is required")
+	// }
+
+	// fmt.Printf("config:%v\n", *config)
+
+	c, err := NewConsumer("NsqConsumer", "", "")
 	if err != nil {
 		return err
 	}
 
-	kv := clientv3.NewKV(etcdCli)
-	resp, err := kv.Get(context.Background(), etcdPath)
-	if err != nil {
-		return err
-	}
+	// c.etcdCli = etcdCli
 
-	isConfig := false
-	var config = newConfig()
-	for _, ev := range resp.Kvs {
-		fmt.Printf("range %s %s\n", string(ev.Key), string(etcdPath))
-		if string(ev.Key) == etcdPath {
-			// todo: schema check
-			err := json.Unmarshal(ev.Value, config)
-			if err != nil {
-				return fmt.Errorf("invalid config format: %s %v", string(ev.Value), err)
-			}
-
-			isConfig = true
-		}
-	}
-
-	if !isConfig {
-		return fmt.Errorf("Config is not exist in path %s", etcdPath)
-	}
-
-	if config.ConsumerName == "" {
-		return fmt.Errorf("Config is invalid, consumer_name is required")
-	}
-
-	if len(config.LookupdHTTPAddresses) == 0 && len(config.NsqdTCPAddresses) == 0 {
-		return fmt.Errorf("Config is invalid, lookupd-http-address or nsqd-tcp-address is required")
-	}
-
-	if len(config.LookupdHTTPAddresses) != 0 && len(config.NsqdTCPAddresses) != 0 {
-		return fmt.Errorf("Config is invalid, use lookupd-http-address or nsqd-tcp-address, not both")
-	}
-
-	if len(config.Topics) == 0 {
-		return fmt.Errorf("Config is invalid, topic is required")
-	}
-
-	fmt.Printf("config:%v\n", *config)
-
-	c, err := NewConsumer(config.ConsumerName, config.IndexPrefix, "")
-	if err != nil {
-		return err
-	}
-
-	c.etcdCli = etcdCli
-	c.Config = config
+	// fmt.Println("c.Config", c.Config)
 
 	return c.launch(settings, ct)
 }
@@ -136,7 +152,6 @@ func (c *Consumer) ConsumerConfig() (*common.Config, error) {
 		return sub, nil
 	}
 
-	fmt.Println("ConsumerConfig", configName)
 	return common.NewConfig(), nil
 }
 
@@ -164,13 +179,67 @@ func (c *Consumer) handleFlags() error {
 
 // configure reads the etcd config, parses the common options defined in ConsumerConfig, initializes logging
 func (c *Consumer) configure(settings Settings) error {
-	cfg, err := common.NewConfigFrom(settings.Config)
+	// read config data from etcd
+	etcdEndpoints, _ := settings.RunFlags.GetStringArray("etcd-endpoints")
+	etcdPath, _ := settings.RunFlags.GetString("etcd-path")
+	etcdUsername, _ := settings.RunFlags.GetString("etcd-username")
+	etcdPassword, _ := settings.RunFlags.GetString("etcd-password")
+	fmt.Printf("etcd(%v):%s %s:%s version(%s)\n", etcdEndpoints, etcdPath, etcdUsername, etcdPassword, version.GetDefaultVersion())
+
+	etcdCli, err := clientv3.New(clientv3.Config{
+		Endpoints:   etcdEndpoints,
+		DialTimeout: 5 * time.Second,
+		Username:    etcdUsername,
+		Password:    etcdPassword,
+	})
+	if err != nil {
+		return err
+	}
+
+	kv := clientv3.NewKV(etcdCli)
+	resp, err := kv.Get(context.Background(), etcdPath)
+	if err != nil {
+		return err
+	}
+
+	config := make(map[string]interface{})
+	for _, ev := range resp.Kvs {
+		fmt.Printf("range %s %s\n", string(ev.Key), string(etcdPath))
+		if string(ev.Key) == etcdPath {
+			err := json.Unmarshal(ev.Value, &config)
+			if err != nil {
+				return fmt.Errorf("invalid config format: %s %v", string(ev.Value), err)
+			}
+		}
+	}
+
+	var cfg *common.Config
+	cfg, err = common.NewConfigFrom(config)
 	if err != nil {
 		return err
 	}
 
 	c.RawConfig = cfg
+	err = cfg.Unpack(&c.Config)
+	if err != nil {
+		return fmt.Errorf("error unpacking config data: %v", err)
+	}
 
+	tailCfg := struct {
+		Desc string `config:"tail.desc"`
+	}{}
+	err = c.Config.Output.Unpack(&tailCfg)
+	if err != nil {
+		return fmt.Errorf("error unpacking tail config data: %v", err)
+	}
+
+	c.ConsumerEntity.Config = &c.Config.ConsumerConfig
+
+	if name := c.Config.Name; name != "" {
+		c.Info.Name = name
+	}
+
+	c.ConsumerEntity.ConsumerConfig, err = c.ConsumerConfig()
 	return nil
 }
 

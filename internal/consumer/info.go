@@ -4,5 +4,5 @@ type Info struct {
 	Consumer    string
 	IndexPrefix string
 	Version     string
-	Name        string
+	Name        string // configured consumer name
 }

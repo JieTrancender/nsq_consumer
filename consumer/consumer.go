@@ -12,14 +12,15 @@ import (
 // New creates a new Consumer pointer instance.
 func New(settings instance.Settings) customer.Creator {
 	return func(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
-		return newConsumer(c, settings)
+		return newConsumer(c, rawConfig)
 	}
 }
 
-func newConsumer(c *consumer.ConsumerEntity, settings instance.Settings) (consumer.Consumer, error) {
-	if settings.Config.ConsumerName == "tail" {
-		return nil, nil
-	}
+func newConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
+	// if settings.Config.ConsumerName == "tail" {
+	// 	return nil, nil
+	// }
 
-	return nil, fmt.Errorf("consumer name is invalid: %s", settings.Config.ConsumerName)
+	return nil, fmt.Errorf("consumer name is invalid: none")
+	// return nil, fmt.Errorf("consumer name is invalid: %s", settings.Config.ConsumerName)
 }
