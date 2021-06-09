@@ -143,7 +143,6 @@ func NewConsumer(name, indexPrefix, v string) (*Consumer, error) {
 // ConsumerConfig returns config section for this consumer
 func (c *Consumer) ConsumerConfig() (*common.Config, error) {
 	configName := strings.ToLower(c.Info.Consumer)
-	fmt.Println("~~~~~~~~ConsumerConfig", configName, c.RawConfig.HasField((configName)))
 	if c.RawConfig.HasField(configName) {
 		sub, err := c.RawConfig.Child(configName, -1)
 		if err != nil {
@@ -240,7 +239,6 @@ func (c *Consumer) configure(settings Settings) error {
 	}
 
 	c.ConsumerEntity.ConsumerConfig, err = c.ConsumerConfig()
-	fmt.Println("~~~~~~~~ConsumerEntity.ConsumerConfig, c.Config.Name", c.Config.Name, c.ConsumerEntity.ConsumerConfig)
 	if err != nil {
 		return err
 	}
