@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
+	"github.com/JieTrancender/nsq_to_consumer/consumer"
+	customer "github.com/JieTrancender/nsq_to_consumer/internal/consumer"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -33,11 +35,11 @@ func NsqConsumerSettings() instance.Settings {
 }
 
 func NsqConsumer(settings instance.Settings) *NsqConsumerRootCmd {
-	command := genRootCmdWithSettings(settings)
+	command := genRootCmdWithSettings(consumer.New(settings), settings)
 	return command
 }
 
-func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
+func genRootCmdWithSettings(ct customer.Creator, settings instance.Settings) *NsqConsumerRootCmd {
 	if settings.IndexPrefix == "" {
 		settings.IndexPrefix = settings.Name
 	}
@@ -45,7 +47,7 @@ func genRootCmdWithSettings(settings instance.Settings) *NsqConsumerRootCmd {
 	rootCmd := &NsqConsumerRootCmd{}
 	rootCmd.Use = settings.Name
 
-	rootCmd.RunCmd = GenRunCmd(settings)
+	rootCmd.RunCmd = GenRunCmd(settings, ct)
 	rootCmd.VersionCmd = GenVersionCmd(settings)
 
 	// Root command is an alias for run
