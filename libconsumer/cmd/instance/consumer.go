@@ -9,15 +9,12 @@ import (
 
 	"go.etcd.io/etcd/clientv3"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/app"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
 )
-
-var etcdEndpoints = app.StringArray{}
 
 // Consumer provides the runnable and configurable instance of a consumer.
 type Consumer struct {
@@ -204,7 +201,9 @@ func (c *Consumer) InitWithSettings(settings Settings) error {
 }
 
 func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
-	defer logp.Sync()
+	defer func() {
+		_ = logp.Sync()
+	}()
 	defer logp.L().Infof("%s stopped.", c.Info.Consumer)
 
 	err := c.InitWithSettings(settings)
