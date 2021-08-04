@@ -15,6 +15,8 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/internal/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
 )
 
 var etcdEndpoints = app.StringArray{}
@@ -38,6 +40,9 @@ type consumerConfig struct {
 	LookupdHTTPAddresses []string `config:"lookupd-http-addresses"`
 	Topics               []string `config:"topics"`
 	Type                 string   `config:"consumer-type"`
+
+	// consumer internal components configurations
+	Logging *common.Config `config:"logging"`
 
 	Output *common.Config `config:"output"`
 }
@@ -237,6 +242,12 @@ func (c *Consumer) configure(settings Settings) error {
 	if name := c.Config.Name; name != "" {
 		c.Info.Name = name
 	}
+
+	if err := configure.Logging(c.Info.Consumer, c.Config.Logging); err != nil {
+		return fmt.Errorf("error initializing logging: %v", err)
+	}
+
+	logp.Info("hello world")
 
 	c.ConsumerEntity.ConsumerConfig, err = c.ConsumerConfig()
 	if err != nil {
