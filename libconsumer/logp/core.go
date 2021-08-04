@@ -101,6 +101,11 @@ func createLogOutput(cfg Config) (zapcore.Core, error) {
 	}
 }
 
+// Sync flushes any buffered log entries. Applications should take care to call Sync before exiting.
+func Sync() error {
+	return loadLogger().rootLogger.Sync()
+}
+
 func makeOptions(cfg Config) []zap.Option {
 	var options []zap.Option
 	if cfg.addCaller {

@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -189,7 +189,7 @@ func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
 
 	tc.updateTopics(etcdConfig)
 
-	lg.LogInfo("TailConsumer", "running...")
+	logp.L().Infof("TailConsumer running...")
 
 forloop:
 	for {
