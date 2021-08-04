@@ -31,6 +31,18 @@ func (l *Logger) Info(args ...interface{}) {
 	l.sugar.Info(args...)
 }
 
+// Sprintf
+
+// Infof uses fmt.Sprintf to log a templated message.
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.sugar.Infof(format, args...)
+}
+
+// Sync syncs the logger
+func (l *Logger) Sync() error {
+	return l.logger.Sync()
+}
+
 func L() *Logger {
 	return loadLogger().logger
 }

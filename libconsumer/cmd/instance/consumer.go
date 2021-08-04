@@ -3,7 +3,6 @@ package instance
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"go.etcd.io/etcd/clientv3"
 
 	"github.com/JieTrancender/nsq_to_consumer/internal/app"
-	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
@@ -48,8 +46,6 @@ type consumerConfig struct {
 }
 
 func init() {
-	fs := flag.CommandLine
-	fs.Var(&etcdEndpoints, "etcd-endpoints", "etcd endpoint, may be given multi times")
 }
 
 func Run(settings Settings, ct consumer.Creator) error {
@@ -102,7 +98,7 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 		return nil, err
 	}
 
-	lg.LogInfo("NsqConsumer", "Setup Consumer: %s, Version: %s", c.Info.Consumer, c.Info.Version)
+	logp.L().Infof("Setup Consumer: %s, Version: %s", c.Info.Consumer, c.Info.Version)
 
 	consumer, err := ct(&c.ConsumerEntity, sub)
 	if err != nil {
@@ -208,7 +204,8 @@ func (c *Consumer) InitWithSettings(settings Settings) error {
 }
 
 func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
-	defer lg.LogInfo("NsqConsumer", "%s stopped", c.Info.Consumer)
+	defer logp.Sync()
+	defer logp.Info("%s stopped.", c.Info.Consumer)
 
 	err := c.InitWithSettings(settings)
 	if err != nil {
@@ -219,6 +216,8 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 	if err != nil {
 		return err
 	}
+
+	logp.Info("%s start running.", c.Info.Consumer)
 
 	// 读取并监听配置
 
