@@ -224,13 +224,13 @@ func (c *Consumer) configure(settings Settings) error {
 		return fmt.Errorf("error unpacking config data: %v", err)
 	}
 
-	tailCfg := struct {
-		Desc string `config:"tail.desc"`
-	}{}
-	err = c.Config.Output.Unpack(&tailCfg)
-	if err != nil {
-		return fmt.Errorf("error unpacking tail config data: %v", err)
-	}
+	// tailCfg := struct {
+	// 	Desc string `config:"tail.desc"`
+	// }{}
+	// err = c.Config.Output.Unpack(&tailCfg)
+	// if err != nil {
+	// 	return fmt.Errorf("error unpacking tail config data: %v", err)
+	// }
 
 	c.ConsumerEntity.Config = &c.Config.ConsumerConfig
 
