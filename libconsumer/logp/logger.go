@@ -31,6 +31,12 @@ func (l *Logger) Info(args ...interface{}) {
 	l.sugar.Info(args...)
 }
 
+// Sprintf
+
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.sugar.Infof(format, args...)
+}
+
 func L() *Logger {
 	return loadLogger().logger
 }
