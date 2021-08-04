@@ -15,6 +15,7 @@ test:
 	go test -v -race -cover -coverprofile=coverage.txt -covermod=atomic ./...
 
 lint:
+	golangci-lint cache clean
 	golangci-lint run --tests=false ./...
 
 clean:
