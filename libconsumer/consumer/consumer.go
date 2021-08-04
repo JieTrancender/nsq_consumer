@@ -1,7 +1,7 @@
 package consumer
 
 import (
-	"github.com/JieTrancender/nsq_to_consumer/internal/common"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 )
 
 type Creator func(*ConsumerEntity, *common.Config) (Consumer, error)

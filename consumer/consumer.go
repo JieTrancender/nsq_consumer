@@ -6,12 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
-	"github.com/JieTrancender/nsq_to_consumer/internal/common"
-	"github.com/JieTrancender/nsq_to_consumer/internal/consumer"
-	customer "github.com/JieTrancender/nsq_to_consumer/internal/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/internal/lg"
 	"github.com/JieTrancender/nsq_to_consumer/internal/version"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -39,7 +38,7 @@ type TailConsumer struct {
 }
 
 // New creates a new Consumer pointer instance.
-func New(settings instance.Settings) customer.Creator {
+func New(settings instance.Settings) consumer.Creator {
 	return func(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
 		return newConsumer(c, rawConfig)
 	}
