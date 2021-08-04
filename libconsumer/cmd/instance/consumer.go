@@ -179,7 +179,7 @@ func (c *Consumer) configure(settings Settings) error {
 		return fmt.Errorf("error initializing logging: %v", err)
 	}
 
-	logp.Info("configure success")
+	logp.L().Infof("configure %s success", c.Info.Consumer)
 
 	c.ConsumerEntity.ConsumerConfig, err = c.ConsumerConfig()
 	if err != nil {

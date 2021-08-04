@@ -19,18 +19,16 @@ var (
 
 func init() {
 	storeLogger(&coreLogger{
-		selectors:    map[string]struct{}{},
-		rootLogger:   zap.NewNop(),
-		globalLogger: zap.NewNop(),
-		logger:       newLogger(zap.NewNop(), ""),
+		selectors:  map[string]struct{}{},
+		rootLogger: zap.NewNop(),
+		logger:     newLogger(zap.NewNop(), ""),
 	})
 }
 
 type coreLogger struct {
-	selectors    map[string]struct{}
-	rootLogger   *zap.Logger
-	globalLogger *zap.Logger
-	logger       *Logger
+	selectors  map[string]struct{}
+	rootLogger *zap.Logger
+	logger     *Logger
 }
 
 func Configure(cfg Config) error {
@@ -75,10 +73,9 @@ func ConfigureWithOutputs(cfg Config, outputs ...zapcore.Core) error {
 	sink = newMultiCore(append(outputs, sink)...)
 	root := zap.New(sink, makeOptions(cfg)...)
 	storeLogger(&coreLogger{
-		selectors:    selectors,
-		rootLogger:   root,
-		globalLogger: root.WithOptions(zap.AddCallerSkip(1)),
-		logger:       newLogger(root, ""),
+		selectors:  selectors,
+		rootLogger: root,
+		logger:     newLogger(root, ""),
 	})
 	return nil
 }
@@ -145,10 +142,6 @@ func wrappedCore(cfg Config, core zapcore.Core) zapcore.Core {
 func loadLogger() *coreLogger {
 	p := atomic.LoadPointer(&_log)
 	return (*coreLogger)(p)
-}
-
-func globalLogger() *zap.Logger {
-	return loadLogger().globalLogger
 }
 
 func storeLogger(l *coreLogger) {
