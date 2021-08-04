@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/common"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 )
 

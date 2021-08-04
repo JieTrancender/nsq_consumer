@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/JieTrancender/nsq_to_consumer/cmd/instance"
-	"github.com/JieTrancender/nsq_to_consumer/internal/common/cli"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common/cli"
 )
 
 func GenVersionCmd(settings instance.Settings) *cobra.Command {
