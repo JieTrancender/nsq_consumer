@@ -205,7 +205,7 @@ func (c *Consumer) InitWithSettings(settings Settings) error {
 
 func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 	defer logp.Sync()
-	defer logp.Info("%s stopped.", c.Info.Consumer)
+	defer logp.L().Infof("%s stopped.", c.Info.Consumer)
 
 	err := c.InitWithSettings(settings)
 	if err != nil {
@@ -217,7 +217,7 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 		return err
 	}
 
-	logp.Info("%s start running.", c.Info.Consumer)
+	logp.L().Infof("%s start running.", c.Info.Consumer)
 
 	// 读取并监听配置
 
