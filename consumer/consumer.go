@@ -113,6 +113,9 @@ func (nc *NSQConsumer) router() {
 
 // Close closes this NSQConsumer
 func (nc *NSQConsumer) Close() {
+	nc.consumer.Stop()
+	<-nc.consumer.StopChan
+
 	logp.L().Infof("NSQConsumer topic %s close", nc.topic)
 }
 
