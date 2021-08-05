@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -32,10 +33,10 @@ func (publisher TailPublisher) handleMessage(m *nsq.Message) error {
 	data := make(map[string]interface{})
 	err := json.Unmarshal(m.Body, &data)
 	if err != nil {
-		fmt.Println("handleMessage", string(m.Body))
+		logp.L().Infof("TailPublisher#handleMessage: %s", string(m.Body))
 		return nil
 	}
 
-	fmt.Println("handleMessage", data)
+	logp.L().Infof("TailPublisher#handleMessage: %v", data)
 	return nil
 }

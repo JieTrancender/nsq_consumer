@@ -4,23 +4,11 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
-	customer "github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 const Name = "nsq-consumer"
-
-type NsqConsumerRootCmd struct {
-	cobra.Command
-	RunCmd     *cobra.Command
-	VersionCmd *cobra.Command
-}
-
-var (
-	RootCmd *NsqConsumerRootCmd
-)
 
 func NsqConsumerSettings() instance.Settings {
 	var runFlags = pflag.NewFlagSet(Name, pflag.ExitOnError)
@@ -35,30 +23,7 @@ func NsqConsumerSettings() instance.Settings {
 	}
 }
 
-func NsqConsumer(settings instance.Settings) *NsqConsumerRootCmd {
-	command := genRootCmdWithSettings(consumer.New(settings), settings)
+func NsqConsumer(settings instance.Settings) *cmd.NsqConsumerRootCmd {
+	command := cmd.GenRootCmdWithSettings(consumer.New(settings), settings)
 	return command
-}
-
-func genRootCmdWithSettings(ct customer.Creator, settings instance.Settings) *NsqConsumerRootCmd {
-	if settings.IndexPrefix == "" {
-		settings.IndexPrefix = settings.Name
-	}
-
-	rootCmd := &NsqConsumerRootCmd{}
-	rootCmd.Use = settings.Name
-
-	rootCmd.RunCmd = cmd.GenRunCmd(settings, ct)
-	rootCmd.VersionCmd = cmd.GenVersionCmd(settings)
-
-	// Root command is an alias for run
-	rootCmd.Run = rootCmd.RunCmd.Run
-
-	rootCmd.Flags().AddFlagSet(rootCmd.RunCmd.Flags())
-
-	// Register subcommands common to all consumers
-	rootCmd.AddCommand(rootCmd.RunCmd)
-	rootCmd.AddCommand(rootCmd.VersionCmd)
-
-	return rootCmd
 }

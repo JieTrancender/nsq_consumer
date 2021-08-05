@@ -14,6 +14,7 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
+	svc "github.com/JieTrancender/nsq_to_consumer/libconsumer/service"
 )
 
 // Consumer provides the runnable and configurable instance of a consumer.
@@ -215,6 +216,13 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 	if err != nil {
 		return err
 	}
+
+	// If there are other service, using ctx, current is ignored.
+	_, cancel := context.WithCancel(context.Background())
+	var stopConsumer = func() {
+		consumer.Stop()
+	}
+	svc.HandleSignals(stopConsumer, cancel)
 
 	logp.L().Infof("%s start running.", c.Info.Consumer)
 

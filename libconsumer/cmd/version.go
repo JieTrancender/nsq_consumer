@@ -10,7 +10,7 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common/cli"
 )
 
-func GenVersionCmd(settings instance.Settings) *cobra.Command {
+func genVersionCmd(settings instance.Settings) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Show current version info",
