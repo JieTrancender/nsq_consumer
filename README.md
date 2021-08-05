@@ -8,19 +8,25 @@
 {
     "consumer-name":"nsq-consumer",
     "nsq-consumer": {
-        "lookupd-http-addresses":["http://127.0.0.1:4161"],
+        "lookupd-http-addresses":["http://xhandr-s3.xxysr.lingwu66.com:19991"],
         "topics":[
             "dev_test"
         ],
-        "consumer-type":"tail"
+        "consumer-type":"nsqd"
     },
     "output": {
         "tail": {
-            "desc": "nsq_to_tail"
+            "desc": "nsq_to_tail",
+            "enabled": true
+        },
+        "nsqd": {
+            "nsqd-tcp-addresses": ["127.0.0.1:4150"],
+            "topic": "dev_test_dup",
+            "enabled": false
         }
     },
     "logging": {
-        "level": 0,
+        "level": -1,
         "to_stderr": true
     }
 }

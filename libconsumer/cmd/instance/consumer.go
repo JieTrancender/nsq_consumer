@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -14,7 +15,9 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
 	svc "github.com/JieTrancender/nsq_to_consumer/libconsumer/service"
+	"github.com/elastic/beats/libbeat/publisher/pipeline"
 )
 
 // Consumer provides the runnable and configurable instance of a consumer.
@@ -40,7 +43,7 @@ type consumerConfig struct {
 	// consumer internal components configurations
 	Logging *common.Config `config:"logging"`
 
-	Output *common.Config `config:"output"`
+	// Output *common.Config `config:"output"`
 }
 
 func init() {
@@ -98,6 +101,21 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 
 	logp.L().Infof("Setup Consumer: %s, Version: %s", c.Info.Consumer, c.Info.Version)
 
+	logp.L().Debug("Initializing output plugins")
+	outputEnabled := c.Config.Output.IsSet() && c.Config.Output.Config().Enabled()
+	if !outputEnabled {
+		msg := "No outputs are defined. Please define one under the output section."
+		logp.L().Info(msg)
+		return nil, errors.New(msg)
+	}
+	pipeline, err := pipeline.Load(c.Info,
+		c.makeOutputFactory(c.Config.Output),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing publisher: %v", err)
+	}
+
+	c.Publisher = pipeline
 	consumer, err := ct(&c.ConsumerEntity, sub)
 	if err != nil {
 		return nil, err
@@ -159,13 +177,13 @@ func (c *Consumer) configure(settings Settings) error {
 		return fmt.Errorf("error unpacking config data: %v", err)
 	}
 
-	tailCfg := struct {
-		Desc string `config:"tail.desc"`
-	}{}
-	err = c.Config.Output.Unpack(&tailCfg)
-	if err != nil {
-		return fmt.Errorf("error unpacking tail config data: %v", err)
-	}
+	// tailCfg := struct {
+	// 	Desc string `config:"tail.desc"`
+	// }{}
+	// err = c.Config.Output.Unpack(&tailCfg)
+	// if err != nil {
+	// 	return fmt.Errorf("error unpacking tail config data: %v", err)
+	// }
 
 	c.ConsumerEntity.Config = &c.Config.ConsumerConfig
 
@@ -229,4 +247,21 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 	// 读取并监听配置
 
 	return consumer.Run(&c.ConsumerEntity)
+}
+
+func (c *Consumer) makeOutputFactory(
+	cfg common.ConfigNamespace,
+) func(outputs.Observer) (string, outputs.Group, error) {
+	return func(outStats outputs.Observer) (string, outputs.Group, error) {
+		out, err := c.createOutput(outStats, cfg)
+		return cfg.Name(), out, err
+	}
+}
+
+func (c *Consumer) createOutput(stats outputs.Observer, cfg common.ConfigNamespace) (outputs.Group, error) {
+	if !cfg.IsSet() {
+		return outputs.Group{}, nil
+	}
+
+	return outputs.Load(c.Info, stats, cfg.Name, cfg.Config())
 }
