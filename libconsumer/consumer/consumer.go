@@ -14,7 +14,8 @@ type Consumer interface {
 }
 
 type ConsumerEntity struct {
-	Info Info
+	Info      Info
+	Publisher Pipeline // Publisher pipeline
 
 	Config *ConsumerConfig
 

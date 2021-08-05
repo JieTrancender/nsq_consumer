@@ -25,7 +25,8 @@ func genRunCmd(settings instance.Settings, ct consumer.Creator) *cobra.Command {
 
 			err := instance.Run(settings, ct)
 			if err != nil {
-				logp.L().Errorf("instance Run fail: %v", err)
+				fmt.Printf("instance Run fail: %v\n", err)
+				logp.L().Errorf("instance Run fail: %+v", err)
 				os.Exit(1)
 			}
 		},

@@ -22,6 +22,12 @@ func NewLogger(selector string, options ...LogOption) *Logger {
 	return newLogger(loadLogger().rootLogger, selector, options...)
 }
 
+// Named adds a new path segment to the logger's name. Segments are joined by periods.
+func (l *Logger) Named(name string) *Logger {
+	logger := l.logger.Named(name)
+	return &Logger{logger, logger.Sugar()}
+}
+
 // Sprint
 func (l *Logger) Debug(args ...interface{}) {
 	l.sugar.Debug(args...)

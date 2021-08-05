@@ -16,8 +16,8 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/publisher/pipeline"
 	svc "github.com/JieTrancender/nsq_to_consumer/libconsumer/service"
-	"github.com/elastic/beats/libbeat/publisher/pipeline"
 )
 
 // Consumer provides the runnable and configurable instance of a consumer.
@@ -30,7 +30,7 @@ type Consumer struct {
 }
 
 type consumerConfig struct {
-	consumer.ConsumerConfig
+	consumer.ConsumerConfig `config:",inline"`
 
 	// instance internal configs
 
@@ -42,6 +42,9 @@ type consumerConfig struct {
 
 	// consumer internal components configurations
 	Logging *common.Config `config:"logging"`
+
+	// output/publishing related configurations
+	Pipeline pipeline.Config `config:",inline"`
 
 	// Output *common.Config `config:"output"`
 }
@@ -108,14 +111,19 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 		logp.L().Info(msg)
 		return nil, errors.New(msg)
 	}
-	pipeline, err := pipeline.Load(c.Info,
-		c.makeOutputFactory(c.Config.Output),
-	)
+
+	var publisher *pipeline.Pipeline
+	monitors := pipeline.Monitors{
+		Logger: logp.L().Named("publisher"),
+	}
+
+	outputFactory := c.makeOutputFactory(c.Config.Output)
+	publisher, err = pipeline.Load(c.Info, monitors, c.Config.Pipeline, outputFactory)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing publisher: %v", err)
 	}
 
-	c.Publisher = pipeline
+	c.Publisher = publisher
 	consumer, err := ct(&c.ConsumerEntity, sub)
 	if err != nil {
 		return nil, err
@@ -263,5 +271,5 @@ func (c *Consumer) createOutput(stats outputs.Observer, cfg common.ConfigNamespa
 		return outputs.Group{}, nil
 	}
 
-	return outputs.Load(c.Info, stats, cfg.Name, cfg.Config())
+	return outputs.Load(c.Info, stats, cfg.Name(), cfg.Config())
 }

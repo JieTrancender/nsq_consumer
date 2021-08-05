@@ -24,7 +24,6 @@ func init() {
 
 // Logging builds a logp.Config based on the given common.Config and the specified CLI flags.
 func Logging(consumerName string, cfg *common.Config) error {
-	fmt.Println("Logging", consumerName, environment)
 	config := logp.DefaultConfig(environment)
 	config.Consumer = consumerName
 	if cfg != nil {
