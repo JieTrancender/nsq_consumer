@@ -21,9 +21,8 @@ type NSQConsumer struct {
 	topic     string
 	consumer  *nsq.Consumer
 
-	msgChan  chan *nsq.Message
-	termChan chan bool
-	hupChan  chan bool
+	done    chan struct{}
+	msgChan chan *nsq.Message
 }
 
 type TailConsumer struct {
@@ -32,9 +31,6 @@ type TailConsumer struct {
 	wg     sync.WaitGroup
 	opts   *Options
 	cfg    *nsq.Config
-
-	termChan chan bool
-	hupChan  chan bool
 }
 
 // New creates a new Consumer pointer instance.
@@ -58,6 +54,7 @@ func newConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer
 }
 
 func newNSQConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *etcdConfig) (*NSQConsumer, error) {
+	logp.L().Debugf("newNSQConsumer %s", topic)
 	// todo configures publisher type
 	publisher, err := newPublisher("tail")
 	if err != nil {
@@ -70,14 +67,13 @@ func newNSQConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *et
 	}
 
 	nsqConsumer := &NSQConsumer{
+		done:      make(chan struct{}),
 		publisher: publisher,
 		topic:     topic,
 		opts:      opts,
 		cfg:       cfg,
 		consumer:  consumer,
 		msgChan:   make(chan *nsq.Message, 1),
-		termChan:  make(chan bool, 1),
-		hupChan:   make(chan bool, 1),
 	}
 	consumer.AddHandler(nsqConsumer)
 
@@ -96,41 +92,28 @@ func (nc NSQConsumer) HandleMessage(m *nsq.Message) error {
 }
 
 func (nc *NSQConsumer) router() {
-	close, exit := false, false
 	for {
 		select {
-		case <-nc.consumer.StopChan:
-			close, exit = true, true
-		case <-nc.termChan:
-			nc.consumer.Stop()
-		case <-nc.hupChan:
-			close = true
+		case <-nc.done:
+			nc.Close()
+			return
 		case m := <-nc.msgChan:
 			err := nc.publisher.handleMessage(m)
 			if err != nil {
 				// retry
 				m.Requeue(-1)
-				fmt.Println("NSQConsumer router msg deal fail", err)
+				logp.L().Errorf("NSQConsumer#router deal message fail: %v", err)
 				os.Exit(1)
 			}
 
 			m.Finish()
-		}
-
-		if close {
-			nc.Close()
-			close = false
-		}
-
-		if exit {
-			break
 		}
 	}
 }
 
 // Close closes this NSQConsumer
 func (nc *NSQConsumer) Close() {
-	fmt.Println("NSQConsumer Close")
+	logp.L().Infof("NSQConsumer topic %s close", nc.topic)
 }
 
 // newTailConsumer creates consumer entity which consumes messages and tail to stdout
@@ -142,12 +125,10 @@ func newTailConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (cons
 	cfg.DialTimeout = 5 * time.Second
 
 	tc := &TailConsumer{
-		done:     make(chan struct{}),
-		opts:     opts,
-		cfg:      cfg,
-		topics:   make(map[string]*NSQConsumer),
-		termChan: make(chan bool),
-		hupChan:  make(chan bool),
+		done:   make(chan struct{}),
+		opts:   opts,
+		cfg:    cfg,
+		topics: make(map[string]*NSQConsumer),
 	}
 
 	return tc, nil
@@ -166,7 +147,7 @@ func (tc *TailConsumer) updateTopics(etcdConfig *etcdConfig) {
 
 		nsqConsumer, err := newNSQConsumer(tc.opts, topic, tc.cfg, etcdConfig)
 		if err != nil {
-			fmt.Printf("newNSQConsumer fail, error: %s", err)
+			logp.L().Infof("newNSQConsumer fail, error: %v", err)
 			continue
 		}
 
@@ -180,6 +161,8 @@ func (tc *TailConsumer) updateTopics(etcdConfig *etcdConfig) {
 }
 
 func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
+	waitFinished := newSignalWait()
+
 	etcdConfig := &etcdConfig{}
 
 	err := c.ConsumerConfig.Unpack(etcdConfig)
@@ -191,22 +174,12 @@ func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
 
 	logp.L().Infof("TailConsumer running...")
 
-forloop:
-	for {
-		select {
-		case <-tc.termChan:
-			tc.wg.Done()
-			for _, nsqConsumer := range tc.topics {
-				close(nsqConsumer.termChan)
-			}
-			break forloop
-		case <-tc.hupChan:
-			tc.wg.Done()
-			for _, nsqConsumer := range tc.topics {
-				nsqConsumer.hupChan <- true
-			}
-			break forloop
-		}
+	// Add done channel to wait for shutdown signal
+	waitFinished.AddChan(tc.done)
+	waitFinished.Wait()
+
+	for _, nsqConsumer := range tc.topics {
+		close(nsqConsumer.done)
 	}
 
 	tc.wg.Wait()
@@ -215,5 +188,8 @@ forloop:
 }
 
 func (tc *TailConsumer) Stop() {
-	fmt.Println("TailConsumer stop...")
+	logp.L().Info("Stopping tail consumer")
+
+	// Stop tail consumer
+	close(tc.done)
 }

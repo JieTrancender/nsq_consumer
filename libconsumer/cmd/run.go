@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GenRunCmd(settings instance.Settings, ct consumer.Creator) *cobra.Command {
+func genRunCmd(settings instance.Settings, ct consumer.Creator) *cobra.Command {
 	name := settings.Name
 	runCmd := cobra.Command{
 		Use:   "run",
