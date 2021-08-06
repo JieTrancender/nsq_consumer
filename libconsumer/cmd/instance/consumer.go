@@ -123,6 +123,7 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 		return nil, fmt.Errorf("error initializing publisher: %v", err)
 	}
 
+	logp.L().Debug("Initializing output pipeline", publisher)
 	c.Publisher = publisher
 	consumer, err := ct(&c.ConsumerEntity, sub)
 	if err != nil {
@@ -267,6 +268,7 @@ func (c *Consumer) makeOutputFactory(
 }
 
 func (c *Consumer) createOutput(stats outputs.Observer, cfg common.ConfigNamespace) (outputs.Group, error) {
+	logp.L().Info("createOutput", !cfg.IsSet())
 	if !cfg.IsSet() {
 		return outputs.Group{}, nil
 	}

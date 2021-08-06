@@ -14,6 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.0 // indirect
 	go.etcd.io/etcd v3.3.25+incompatible
+	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/zap v1.14.0
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect

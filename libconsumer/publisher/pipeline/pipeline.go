@@ -5,6 +5,7 @@ import (
 
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
 )
 
 type WaitCloseMode uint8
@@ -32,6 +33,7 @@ type Pipeline struct {
 func New(
 	consumerInfo consumer.Info,
 	monitors Monitors,
+	out outputs.Group,
 	settings Settings,
 ) (*Pipeline, error) {
 	if monitors.Logger == nil {
@@ -39,6 +41,9 @@ func New(
 	}
 
 	p := &Pipeline{}
+
+	p.output = newOutputController(consumerInfo, monitors)
+	p.output.Set(out)
 
 	return p, nil
 }

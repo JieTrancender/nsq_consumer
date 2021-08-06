@@ -4,13 +4,15 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/publisher"
+	"github.com/elastic/beats/libbeat/publisher/queue"
 )
 
 type outputController struct {
 	consumerInfo consumer.Info
 	monitors     Monitors
 
-	out *outputGroup
+	consumer *eventConsumer
+	out      *outputGroup
 }
 
 // outputGroup configures a group of load balanced outputs with shared work queue.
@@ -28,6 +30,26 @@ type workQueue chan publisher.Batch
 // instances.
 type outputWorker interface {
 	Close() error
+}
+
+func newOutputController(
+	consumerInfo consumer.Info,
+	monitors Monitors,
+	observer outputObserver,
+	queue queue.Queue,
+) *outputController {
+	c := &outputController{
+		consumerInfo: consumerInfo,
+		monitors:     monitors,
+	}
+
+	ctx := &batchContext{}
+	c.consumer = newEventConsumer(monitors.Logger, queue, ctx)
+	ctx.observer = observer
+
+	c.consumer.sigContinue()
+
+	return c
 }
 
 func (c *outputController) Close() error {
