@@ -7,3 +7,6 @@ type Batch interface {
 	Retry()
 	Canceled()
 }
+
+type Event struct {
+}
