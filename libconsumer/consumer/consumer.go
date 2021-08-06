@@ -14,7 +14,8 @@ type Consumer interface {
 }
 
 type ConsumerEntity struct {
-	Info Info
+	Info      Info
+	Publisher Pipeline // Publisher pipeline
 
 	Config *ConsumerConfig
 
@@ -24,5 +25,5 @@ type ConsumerEntity struct {
 // ConsumerConfig struct contains the basic configuration of every consumer
 type ConsumerConfig struct {
 	// output/publishing related configurations
-	Output common.ConfigNamespace `config:"output"`
+	Output common.ConfigNamespace `config:"output" json:"output"`
 }

@@ -22,6 +22,21 @@ func NewLogger(selector string, options ...LogOption) *Logger {
 	return newLogger(loadLogger().rootLogger, selector, options...)
 }
 
+func (l *Logger) WithOptions(options ...LogOption) *Logger {
+	cloned := l.logger.WithOptions(options...)
+	return &Logger{cloned, cloned.Sugar()}
+}
+
+func (l *Logger) With(args ...interface{}) *Logger {
+	sugar := l.sugar.With(args...)
+	return &Logger{sugar.Desugar(), sugar}
+}
+
+func (l *Logger) Named(name string) *Logger {
+	logger := l.logger.Named(name)
+	return &Logger{logger, logger.Sugar()}
+}
+
 // Sprint
 func (l *Logger) Debug(args ...interface{}) {
 	l.sugar.Debug(args...)
