@@ -23,6 +23,8 @@ type NSQConsumer struct {
 
 	done    chan struct{}
 	msgChan chan *nsq.Message
+
+	pipeline consumer.PipelineConnector
 }
 
 type TailConsumer struct {
@@ -31,6 +33,8 @@ type TailConsumer struct {
 	wg     sync.WaitGroup
 	opts   *Options
 	cfg    *nsq.Config
+
+	pipeline consumer.PipelineConnector
 }
 
 // New creates a new Consumer pointer instance.
@@ -46,14 +50,17 @@ func newConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer
 		return nil, err
 	}
 
-	if consumerType == "tail" {
+	switch consumerType {
+	case "tail":
 		return newTailConsumer(c, rawConfig)
+	case "nsq":
+		return nil, fmt.Errorf("consumer name is invalid: %s", consumerType)
+	default:
+		return nil, fmt.Errorf("consumer name is invalid: %s", consumerType)
 	}
-
-	return nil, fmt.Errorf("consumer name is invalid: %s", consumerType)
 }
 
-func newNSQConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *etcdConfig) (*NSQConsumer, error) {
+func newNSQConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *etcdConfig, pipeline consumer.Pipeline) (*NSQConsumer, error) {
 	logp.L().Debugf("newNSQConsumer %s", topic)
 	// todo configures publisher type
 	publisher, err := newPublisher("tail")
@@ -74,6 +81,7 @@ func newNSQConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *et
 		cfg:       cfg,
 		consumer:  consumer,
 		msgChan:   make(chan *nsq.Message, 1),
+		pipeline:  pipeline,
 	}
 	consumer.AddHandler(nsqConsumer)
 
@@ -98,7 +106,8 @@ func (nc *NSQConsumer) router() {
 			nc.Close()
 			return
 		case m := <-nc.msgChan:
-			err := nc.publisher.handleMessage(m)
+			// err := nc.publisher.handleMessage(m)
+			err := nc.pipeline.HandleMessage(m)
 			if err != nil {
 				// retry
 				m.Requeue(-1)
@@ -148,7 +157,7 @@ func (tc *TailConsumer) updateTopics(etcdConfig *etcdConfig) {
 			continue
 		}
 
-		nsqConsumer, err := newNSQConsumer(tc.opts, topic, tc.cfg, etcdConfig)
+		nsqConsumer, err := newNSQConsumer(tc.opts, topic, tc.cfg, etcdConfig, tc.pipeline)
 		if err != nil {
 			logp.L().Infof("newNSQConsumer fail, error: %v", err)
 			continue
@@ -172,6 +181,8 @@ func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
 	if err != nil {
 		return err
 	}
+
+	tc.pipeline = c.Publisher
 
 	tc.updateTopics(etcdConfig)
 

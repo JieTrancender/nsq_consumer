@@ -1,6 +1,8 @@
 package common
 
 import (
+	"errors"
+
 	"github.com/elastic/go-ucfg"
 )
 
@@ -47,6 +49,22 @@ func (c *Config) access() *ucfg.Config {
 	return (*ucfg.Config)(c)
 }
 
+func (c *Config) Enabled() bool {
+	testEnabled := struct {
+		Enabled bool `config:"enabled"`
+	}{true}
+
+	if c == nil {
+		return false
+	}
+
+	if err := c.Unpack(&testEnabled); err != nil {
+		// if unpacking fails, expect 'enabled' being set to default
+		return true
+	}
+	return testEnabled.Enabled
+}
+
 func (c *Config) GetFields() []string {
 	return c.access().GetFields()
 }
@@ -54,6 +72,50 @@ func (c *Config) GetFields() []string {
 func (c *Config) Child(name string, idx int) (*Config, error) {
 	sub, err := c.access().Child(name, idx, configOpts...)
 	return fromConfig(sub), err
+}
+
+// Unpack unpacks a configuration with at most one sub object. An sub object is
+// ignored if it is disabled by setting `enabled: false`. If the configuration
+// passed contains multiple active sub objects, Unpack will return an error.
+func (ns *ConfigNamespace) Unpack(cfg *Config) error {
+	fields := cfg.GetFields()
+	if len(fields) == 0 {
+		return nil
+	}
+
+	var (
+		err   error
+		found bool
+	)
+
+	for _, name := range fields {
+		var sub *Config
+
+		sub, err = cfg.Child(name, -1)
+		if err != nil {
+			// element is no configuration object -> continue so a namespace
+			// Config unpacked as a namespace can have other configuration
+			// values as well
+			continue
+		}
+
+		if !sub.Enabled() {
+			continue
+		}
+
+		if ns.name != "" {
+			return errors.New("more than one namespace configured")
+		}
+
+		ns.name = name
+		ns.config = sub
+		found = true
+	}
+
+	if !found {
+		return err
+	}
+	return nil
 }
 
 func (ns *ConfigNamespace) Name() string {
