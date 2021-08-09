@@ -114,6 +114,9 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 	logger := logp.L().Named("publisher")
 	outputFactory := c.makeOutputFactory(c.Config.Output)
 	publisher, err = pipeline.Load(c.Info, logger, c.Config.Pipeline, outputFactory)
+	if err != nil {
+		return nil, err
+	}
 	c.Publisher = publisher
 
 	consumer, err := ct(&c.ConsumerEntity, sub)
