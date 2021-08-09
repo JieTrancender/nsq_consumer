@@ -1,0 +1,82 @@
+package console
+
+import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
+	"github.com/nsqio/go-nsq"
+)
+
+type console struct {
+	logger *logp.Logger
+	out    *os.File
+	writer *bufio.Writer
+}
+
+type consoleEvent struct {
+}
+
+func init() {
+	outputs.RegisterType("console", makeConsole)
+}
+
+func makeConsole(
+	consumerInfo consumer.Info,
+	cfg *common.Config,
+) (outputs.Group, error) {
+	config := defaultConfig
+	err := cfg.Unpack(&config)
+	if err != nil {
+		return outputs.Group{}, err
+	}
+
+	c, err := newConsole()
+	if err != nil {
+		return outputs.Group{}, fmt.Errorf("console output initialization failed with: %v", err)
+	}
+
+	return outputs.Success(config.BatchSize, 0, c)
+}
+
+func newConsole() (*console, error) {
+	c := &console{
+		logger: logp.NewLogger("console"),
+		out:    os.Stdout,
+	}
+	c.writer = bufio.NewWriterSize(c.out, 8*1024)
+	return c, nil
+}
+
+func (c *console) Close() error { return nil }
+func (c *console) Publish(_ context.Context, m *nsq.Message) error {
+	data := make(map[string]interface{})
+	err := json.Unmarshal(m.Body, &data)
+	if err != nil {
+		c.logger.Infof("console#Publish: %s", string(m.Body))
+		return nil
+	}
+
+	c.logger.Infof("console#Publish: %v", data)
+
+	written := 0
+	for written < len(m.Body) {
+		n, err := c.writer.Write(m.Body[written:])
+		if err != nil {
+			return err
+		}
+
+		written += n
+	}
+	return nil
+}
+
+func (c *console) String() string {
+	return "console"
+}

@@ -14,13 +14,17 @@ type eventConsumer struct {
 	done    chan struct{}
 	msgChan chan *nsq.Message
 	wg      sync.WaitGroup
+
+	out *outputGroup
 }
 
 func newEventConsumer(
 	log *logp.Logger,
+	msgChan chan *nsq.Message,
 ) *eventConsumer {
 	c := &eventConsumer{
-		logger: log,
+		logger:  log,
+		msgChan: msgChan,
 	}
 
 	c.wg.Add(1)
@@ -48,6 +52,10 @@ func (c *eventConsumer) loop() {
 			m.Finish()
 		}
 	}
+}
+
+func (c *eventConsumer) updOutput(grp *outputGroup) {
+	c.out = grp
 }
 
 func (c *eventConsumer) handleMessage(m *nsq.Message) error {

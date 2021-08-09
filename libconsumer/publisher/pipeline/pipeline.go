@@ -25,7 +25,10 @@ func New(
 		logger:       logger,
 	}
 
-	p.output = newOutputController(consumerInfo, logger)
+	msgChan := make(chan *nsq.Message, 1)
+
+	p.output = newOutputController(consumerInfo, logger, msgChan)
+	p.output.Set(out)
 
 	return p, nil
 }
