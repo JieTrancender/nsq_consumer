@@ -35,10 +35,11 @@ func Load(
 	name string,
 	config *common.Config,
 ) (Group, error) {
-	logp.L().Info("output_reg#Load", name, consumerInfo.Name)
+	logp.L().Infof("output_reg#Load %s %s", name, consumerInfo.Name)
 	factory := FindFactory(name)
 	if factory == nil {
-		return Group{}, fmt.Errorf("output type %v undefined", name)
+		// return Group{}, fmt.Errorf("output type %v undefined", name)
+		return Group{}, nil
 	}
 
 	return factory(consumerInfo, config)

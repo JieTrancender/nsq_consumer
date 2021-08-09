@@ -46,6 +46,6 @@ func loadOutput(
 	}
 
 	outName, out, err := makeOutput()
-	log.Infof("out name: %s", outName)
+	log.Infof("output name: %s", outName)
 	return out, err
 }

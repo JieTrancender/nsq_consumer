@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"encoding/json"
 	"sync"
 
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
@@ -47,4 +48,16 @@ func (c *eventConsumer) loop() {
 			m.Finish()
 		}
 	}
+}
+
+func (c *eventConsumer) handleMessage(m *nsq.Message) error {
+	data := make(map[string]interface{})
+	err := json.Unmarshal(m.Body, &data)
+	if err != nil {
+		c.logger.Infof("eventConsumer#handleMessage: %s", string(m.Body))
+		return nil
+	}
+
+	c.logger.Infof("eventConsumer#handleMessage: %v", data)
+	return nil
 }
