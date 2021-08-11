@@ -20,6 +20,9 @@ func FindFactory(name string) Factory {
 }
 
 type Group struct {
+	Clients   []Client
+	BatchSize int
+	Retry     int
 }
 
 // RegisterType registers a new output type.

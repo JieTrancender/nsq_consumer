@@ -25,9 +25,22 @@ func New(
 		logger:       logger,
 	}
 
-	p.output = newOutputController(consumerInfo, logger)
+	msgChan := make(chan *nsq.Message, 1)
+
+	p.output = newOutputController(consumerInfo, logger, msgChan)
+	p.output.Set(out)
 
 	return p, nil
+}
+
+func (p *Pipeline) Close() error {
+	log := p.logger
+	log.Debug("close pipeline")
+
+	// close output before shutting down
+	p.output.Close()
+
+	return nil
 }
 
 func (p *Pipeline) Connect() (consumer.Client, error) {
