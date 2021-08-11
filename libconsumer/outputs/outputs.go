@@ -13,3 +13,12 @@ type Client interface {
 
 	String() string
 }
+
+type NetworkClient interface {
+	Client
+	Connectable
+}
+
+type Connectable interface {
+	Connect() error
+}
