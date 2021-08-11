@@ -3,14 +3,14 @@ package pipeline
 import (
 	"context"
 
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
-	"github.com/nsqio/go-nsq"
 )
 
 type worker struct {
 	done    chan struct{}
-	msgChan chan *nsq.Message
+	msgChan chan consumer.Message
 }
 
 // clientWorker manages output client of type outputs.Client, not supporting reconnect.
@@ -21,7 +21,7 @@ type clientWorker struct {
 	logger *logp.Logger
 }
 
-func makeClientWorker(msgChan chan *nsq.Message, client outputs.Client, logger *logp.Logger) outputWorker {
+func makeClientWorker(msgChan chan consumer.Message, client outputs.Client, logger *logp.Logger) outputWorker {
 	w := worker{
 		msgChan: msgChan,
 		done:    make(chan struct{}),
@@ -57,11 +57,11 @@ func (w *clientWorker) run() {
 			return
 		case m := <-w.msgChan:
 			if err := w.client.Publish(context.TODO(), m); err != nil {
-				m.Requeue(-1)
+				m.GetNsqMessage().Requeue(-1)
 				w.logger.Errorf("clientWorker#run Publish message fail:%v", err)
 				continue
 			}
-			m.Finish()
+			m.GetNsqMessage().Finish()
 		}
 	}
 }
