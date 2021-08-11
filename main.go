@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/JieTrancender/nsq_to_consumer/cmd"
+	"github.com/JieTrancender/nsq_consumer/cmd"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
 )
 
 // HandleSignals manages OS signals that ask the service/daemon to stop.

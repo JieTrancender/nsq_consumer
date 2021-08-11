@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/cmd/instance"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
 	"github.com/spf13/cobra"
 )
 

@@ -1,9 +1,9 @@
 package pipeline
 
 import (
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/outputs"
 	"github.com/nsqio/go-nsq"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/common"
 )
 
 type Config struct {
