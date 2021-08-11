@@ -1,20 +1,17 @@
 package pipeline
 
 import (
-	"encoding/json"
 	"errors"
 	"sync"
 
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common/atomic"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
-	"github.com/nsqio/go-nsq"
 )
 
 type eventConsumer struct {
 	logger *logp.Logger
 
 	pause atomic.Bool
-	wait  atomic.Bool
 	done  chan struct{}
 	wg    sync.WaitGroup
 	sig   chan consumerSignal
@@ -60,33 +57,6 @@ func newEventConsumer(
 func (c *eventConsumer) close() {
 	c.sig <- consumerSignal{tag: sigStop}
 	c.wg.Wait()
-}
-
-func (c *eventConsumer) sigWait() {
-	c.wait.Store(true)
-	c.sigHint()
-}
-
-func (c *eventConsumer) sigUnWait() {
-	c.wait.Store(false)
-	c.sigHint()
-}
-
-func (c *eventConsumer) sigPause() {
-	c.pause.Store(true)
-	c.sigHint()
-}
-
-func (c *eventConsumer) sigContinue() {
-	c.pause.Store(false)
-	c.sigHint()
-}
-
-func (c *eventConsumer) sigHint() {
-	select {
-	case c.sig <- consumerSignal{tag: sigConsumerCheck}:
-	default:
-	}
 }
 
 func (c *eventConsumer) updOutput(grp *outputGroup) {
@@ -150,16 +120,4 @@ func (c *eventConsumer) loop() {
 
 func (c *eventConsumer) paused() bool {
 	return c.pause.Load()
-}
-
-func (c *eventConsumer) handleMessage(m *nsq.Message) error {
-	data := make(map[string]interface{})
-	err := json.Unmarshal(m.Body, &data)
-	if err != nil {
-		c.logger.Infof("eventConsumer#handleMessage: %s", string(m.Body))
-		return nil
-	}
-
-	c.logger.Infof("eventConsumer#handleMessage: %v", data)
-	return nil
 }

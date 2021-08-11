@@ -49,8 +49,7 @@ func newOutputController(
 
 func (c *outputController) Close() error {
 	c.logger.Info("outputController#Close")
-	// c.consumer.sigPause()
-	// c.consumer.close()
+	c.consumer.close()
 	// c.retryer.close()
 	close(c.workQueue)
 
