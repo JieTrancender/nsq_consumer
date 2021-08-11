@@ -10,14 +10,14 @@ import (
 
 	"go.etcd.io/etcd/clientv3"
 
-	"github.com/JieTrancender/nsq_to_consumer/internal/version"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp/configure"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/publisher/pipeline"
-	svc "github.com/JieTrancender/nsq_to_consumer/libconsumer/service"
+	"github.com/JieTrancender/nsq_consumer/internal/version"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/common"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/logp/configure"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/outputs"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/publisher/pipeline"
+	svc "github.com/JieTrancender/nsq_consumer/libconsumer/service"
 )
 
 // Consumer provides the runnable and configurable instance of a consumer.

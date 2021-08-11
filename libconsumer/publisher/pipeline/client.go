@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
 )
 
 type client struct {

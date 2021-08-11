@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/JieTrancender/nsq_to_consumer/consumer"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/cmd/instance"
+	"github.com/JieTrancender/nsq_consumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/cmd"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/cmd/instance"
 
 	"github.com/spf13/pflag"
 )

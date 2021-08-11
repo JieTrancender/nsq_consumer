@@ -3,7 +3,7 @@ package outputs
 import (
 	"context"
 
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
 )
 
 type Client interface {

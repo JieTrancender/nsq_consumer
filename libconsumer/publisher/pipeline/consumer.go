@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common/atomic"
-	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/common/atomic"
+	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
 )
 
 type eventConsumer struct {
