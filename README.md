@@ -38,11 +38,11 @@ make clean && ./build/nsq_to_consumer --etcd-endpoints 127.0.0.1:2379 --etcd-use
 ~~~
 ### Output list
 1. console
+2. nsqd
 3. file[todo]
-3. nsqd[todo]
-3. http[todo]
-4. mysql[todo]
-5. elasticsearch[todo]
+4. http[todo]
+5. mysql[todo]
+6. elasticsearch[todo]
 
 ### Getting Help
 If you need help or hit an issue, you can make a issue, we will deal it as soon as posibile.
