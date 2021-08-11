@@ -40,8 +40,6 @@ func makeConsole(
 
 	// check stdout actually being available
 	if runtime.GOOS != "windows" {
-		x, _ := c.out.Stat()
-		fmt.Println("~~~~~~~~~~~~~~", x)
 		if _, err = c.out.Stat(); err != nil {
 			err = fmt.Errorf("console output initialization failed with: %v", err)
 			return outputs.Fail(err)
