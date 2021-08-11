@@ -14,6 +14,8 @@ type Pipeline interface {
 type Message interface {
 	GetNsqMessage() *nsq.Message
 	Body() []byte
+	GetTopic() string
+	GetMessageBody() []byte
 }
 
 type PipelineConnector = Pipeline

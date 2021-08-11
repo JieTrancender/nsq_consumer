@@ -17,9 +17,10 @@
     },
     "output": {
         "nsqd": {
-            "nsqd-tcp-addresses": ["127.0.0.1:4150"],
+            "nsqd": "127.0.0.1:4150",
             "topic": "dev_test_dup",
-            "enabled": false
+            "enabled": false,
+            "enabled_topic": true
         },
         "console": {
             "enabled": true
