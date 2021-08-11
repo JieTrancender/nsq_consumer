@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -106,16 +105,7 @@ func (nc *NSQConsumer) router() {
 			nc.Close()
 			return
 		case m := <-nc.msgChan:
-			// err := nc.publisher.handleMessage(m)
-			err := nc.pipeline.HandleMessage(m)
-			if err != nil {
-				// retry
-				m.Requeue(-1)
-				logp.L().Errorf("NSQConsumer#router deal message fail: %v", err)
-				os.Exit(1)
-			}
-
-			m.Finish()
+			nc.pipeline.HandleMessage(m)
 		}
 	}
 }

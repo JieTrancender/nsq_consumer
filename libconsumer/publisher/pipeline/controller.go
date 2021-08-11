@@ -43,7 +43,8 @@ func newOutputController(
 		workQueue:    makeWorkQueue(),
 	}
 
-	c.consumer = newEventConsumer(logger, msgChan)
+	// c.consumer = newEventConsumer(logger, msgChan)
+	c.consumer = newEventConsumer(logger)
 
 	return c
 }
@@ -65,6 +66,7 @@ func (c *outputController) Close() error {
 }
 
 func (c *outputController) Set(outGrp outputs.Group) {
+	c.logger.Infof("outputController#Set, client num is : %d", len(outGrp.Clients))
 	// create new output group with the shared chan
 	clients := outGrp.Clients
 	worker := make([]outputWorker, len(clients))
@@ -74,13 +76,11 @@ func (c *outputController) Set(outGrp outputs.Group) {
 	}
 	grp := &outputGroup{
 		workQueue: c.workQueue,
-		msgChan:   c.msgChan,
-		outputs:   worker,
+		// msgChan:   c.msgChan,
+		outputs: worker,
 	}
 
 	c.consumer.updOutput(grp)
-
-	c.out = grp
 
 	// close old group, so messages are sent to new msg chan
 	if c.out != nil {
@@ -88,6 +88,8 @@ func (c *outputController) Set(outGrp outputs.Group) {
 			w.Close()
 		}
 	}
+
+	c.out = grp
 
 	// restart consumer
 	// c.consumer.sigContinue()

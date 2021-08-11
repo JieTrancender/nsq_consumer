@@ -3,9 +3,9 @@ package console
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
@@ -42,6 +42,16 @@ func makeConsole(
 		return outputs.Group{}, fmt.Errorf("console output initialization failed with: %v", err)
 	}
 
+	// check stdout actually being available
+	if runtime.GOOS != "windows" {
+		x, _ := c.out.Stat()
+		fmt.Println("~~~~~~~~~~~~~~", x)
+		if _, err = c.out.Stat(); err != nil {
+			err = fmt.Errorf("console output initialization failed with: %v", err)
+			return outputs.Fail(err)
+		}
+	}
+
 	return outputs.Success(config.BatchSize, 0, c)
 }
 
@@ -55,19 +65,28 @@ func newConsole() (*console, error) {
 }
 
 func (c *console) Close() error { return nil }
+
+var nl = []byte("\n")
+
 func (c *console) Publish(_ context.Context, m *nsq.Message) error {
-	data := make(map[string]interface{})
-	err := json.Unmarshal(m.Body, &data)
-	if err != nil {
-		c.logger.Infof("console#Publish: %s", string(m.Body))
-		return nil
+	if err := c.writeBuffer(m.Body); err != nil {
+		c.logger.Errorf("Unable to publish message to console: %+v", err)
+		return err
 	}
 
-	c.logger.Infof("console#Publish: %v", data)
+	if err := c.writeBuffer(nl); err != nil {
+		c.logger.Errorf("Error when appending newline to console: %+v", err)
+		return err
+	}
+	c.writer.Flush()
 
+	return nil
+}
+
+func (c *console) writeBuffer(buf []byte) error {
 	written := 0
-	for written < len(m.Body) {
-		n, err := c.writer.Write(m.Body[written:])
+	for written < len(buf) {
+		n, err := c.writer.Write(buf[written:])
 		if err != nil {
 			return err
 		}

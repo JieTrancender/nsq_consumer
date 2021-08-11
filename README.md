@@ -15,12 +15,17 @@
         "consumer-type":"tail"
     },
     "output": {
-        "tail": {
-            "desc": "nsq_to_tail"
+        "nsqd": {
+            "nsqd-tcp-addresses": ["127.0.0.1:4150"],
+            "topic": "dev_test_dup",
+            "enabled": false
+        },
+        "console": {
+            "enabled": true
         }
     },
     "logging": {
-        "level": 0,
+        "level": -1,
         "to_stderr": true
     }
 }
@@ -29,11 +34,11 @@
 ~~~
 make clean && ./build/nsq_to_consumer --etcd-endpoints 127.0.0.1:2379 --etcd-username root --etcd-password 123456 --etcd-path /nsq_consumer/default
 ~~~
-
-### Consumer list
-1. tail
-2. http[todo]
+### Output list
+1. console
 3. file[todo]
+3. nsqd[todo]
+3. http[todo]
 4. mysql[todo]
 5. elasticsearch[todo]
 

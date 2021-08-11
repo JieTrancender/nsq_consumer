@@ -17,6 +17,8 @@ type worker struct {
 type clientWorker struct {
 	worker
 	client outputs.Client
+
+	logger *logp.Logger
 }
 
 func makeClientWorker(msgChan chan *nsq.Message, client outputs.Client, logger *logp.Logger) outputWorker {
@@ -30,7 +32,11 @@ func makeClientWorker(msgChan chan *nsq.Message, client outputs.Client, logger *
 		run()
 	}
 
-	c = &clientWorker{worker: w, client: client}
+	c = &clientWorker{
+		worker: w,
+		client: client,
+		logger: logger,
+	}
 	go c.run()
 	return c
 }
@@ -45,14 +51,19 @@ func (w *clientWorker) Close() error {
 }
 
 func (w *clientWorker) run() {
+	w.logger.Info("clientWorker#run...")
 	for {
 		select {
 		case <-w.done:
+			w.logger.Info("clientWorker#run accep done signal")
 			return
 		case m := <-w.msgChan:
 			if err := w.client.Publish(context.TODO(), m); err != nil {
-				return
+				m.Requeue(-1)
+				w.logger.Errorf("clientWorker#run Publish message fail:%v", err)
+				continue
 			}
+			m.Finish()
 		}
 	}
 }
