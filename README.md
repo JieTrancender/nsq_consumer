@@ -10,9 +10,10 @@
     "nsq-consumer": {
         "lookupd-http-addresses":["http://127.0.0.1:4161"],
         "topics":[
-            "dev_test"
+            "dev_test",
+            "dev_test_2"
         ],
-        "consumer-type":"tail"
+        "consumer-type":"nsq"
     },
     "output": {
         "nsqd": {
