@@ -20,9 +20,6 @@ type console struct {
 	writer *bufio.Writer
 }
 
-type consoleEvent struct {
-}
-
 func init() {
 	outputs.RegisterType("console", makeConsole)
 }

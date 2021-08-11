@@ -30,9 +30,7 @@ func makeClientWorker(msgChan chan *nsq.Message, client outputs.Client, logger *
 	var c interface {
 		outputWorker
 		run()
-	}
-
-	c = &clientWorker{
+	} = &clientWorker{
 		worker: w,
 		client: client,
 		logger: logger,

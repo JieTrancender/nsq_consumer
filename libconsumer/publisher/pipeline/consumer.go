@@ -13,20 +13,18 @@ import (
 type eventConsumer struct {
 	logger *logp.Logger
 
-	pause   atomic.Bool
-	wait    atomic.Bool
-	done    chan struct{}
-	msgChan chan *nsq.Message
-	wg      sync.WaitGroup
-	sig     chan consumerSignal
+	pause atomic.Bool
+	wait  atomic.Bool
+	done  chan struct{}
+	wg    sync.WaitGroup
+	sig   chan consumerSignal
 
 	out *outputGroup
 }
 
 type consumerSignal struct {
-	tag     consumerEventTag
-	msgChan chan *nsq.Message
-	out     *outputGroup
+	tag consumerEventTag
+	out *outputGroup
 }
 
 type consumerEventTag uint8
@@ -42,14 +40,11 @@ var errStopped = errors.New("stopped")
 
 func newEventConsumer(
 	logger *logp.Logger,
-	// msgChan chan *nsq.Message,
 ) *eventConsumer {
 	c := &eventConsumer{
 		logger: logger,
 		sig:    make(chan consumerSignal, 3),
 		out:    nil,
-
-		// msgChan: msgChan,
 	}
 
 	c.pause.Store(true)
@@ -108,7 +103,6 @@ func (c *eventConsumer) loop() {
 	log.Debug("start pipeline event consumer")
 
 	var (
-		out    workQueue
 		paused = true
 	)
 
@@ -124,22 +118,12 @@ func (c *eventConsumer) loop() {
 		}
 
 		paused = c.paused()
-		if c.out != nil {
-			out = c.out.workQueue
-		} else {
-			out = nil
-		}
 		return nil
 	}
 
 	for {
 		if !paused && c.out != nil {
-			out = c.out.workQueue
-
 			paused = c.paused()
-			if paused {
-				out = nil
-			}
 		}
 
 		select {
@@ -160,18 +144,6 @@ func (c *eventConsumer) loop() {
 			if err := handleSignal(sig); err != nil {
 				return
 			}
-			// case m := <-c.msgChan:
-			// 	c.logger.Info("accept msg ", string(m.Body))
-			// 	out <- m
-			// 	c.logger.Info("send msg ", string(m.Body))
-
-			// 	// 输出消息处理
-			// 	// log.Infof("new message: %v", m)
-			// 	// out <- m
-			// 	// m.Finish()
-			// 	if paused {
-			// 		out = nil
-			// 	}
 		}
 	}
 }

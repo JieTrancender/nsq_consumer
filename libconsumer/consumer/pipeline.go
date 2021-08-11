@@ -6,6 +6,7 @@ type Pipeline interface {
 	ConnectWith(ClientConfig) (Client, error)
 	Connect() (Client, error)
 	HandleMessage(m *nsq.Message) error
+	Close() error
 }
 
 type PipelineConnector = Pipeline

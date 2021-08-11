@@ -105,7 +105,7 @@ func (nc *NSQConsumer) router() {
 			nc.Close()
 			return
 		case m := <-nc.msgChan:
-			nc.pipeline.HandleMessage(m)
+			_ = nc.pipeline.HandleMessage(m)
 		}
 	}
 }
@@ -181,6 +181,8 @@ func (tc *TailConsumer) Run(c *consumer.ConsumerEntity) error {
 	// Add done channel to wait for shutdown signal
 	waitFinished.AddChan(tc.done)
 	waitFinished.Wait()
+
+	_ = tc.pipeline.Close()
 
 	for _, nsqConsumer := range tc.topics {
 		close(nsqConsumer.done)

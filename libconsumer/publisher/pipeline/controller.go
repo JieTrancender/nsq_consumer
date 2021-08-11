@@ -21,8 +21,6 @@ type outputController struct {
 type outputGroup struct {
 	workQueue workQueue
 	outputs   []outputWorker
-
-	msgChan chan *nsq.Message
 }
 
 type workQueue chan *nsq.Message
@@ -76,8 +74,7 @@ func (c *outputController) Set(outGrp outputs.Group) {
 	}
 	grp := &outputGroup{
 		workQueue: c.workQueue,
-		// msgChan:   c.msgChan,
-		outputs: worker,
+		outputs:   worker,
 	}
 
 	c.consumer.updOutput(grp)
@@ -101,5 +98,5 @@ func (c *outputController) handleMessage(m *nsq.Message) error {
 }
 
 func makeWorkQueue() workQueue {
-	return workQueue(make(chan *nsq.Message, 0))
+	return workQueue(make(chan *nsq.Message))
 }

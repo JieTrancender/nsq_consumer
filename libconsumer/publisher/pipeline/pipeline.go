@@ -33,6 +33,16 @@ func New(
 	return p, nil
 }
 
+func (p *Pipeline) Close() error {
+	log := p.logger
+	log.Debug("close pipeline")
+
+	// close output before shutting down
+	p.output.Close()
+
+	return nil
+}
+
 func (p *Pipeline) Connect() (consumer.Client, error) {
 	return p.ConnectWith(consumer.ClientConfig{})
 }
