@@ -11,7 +11,6 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
-	"github.com/nsqio/go-nsq"
 )
 
 type console struct {
@@ -65,8 +64,8 @@ func (c *console) Close() error { return nil }
 
 var nl = []byte("\n")
 
-func (c *console) Publish(_ context.Context, m *nsq.Message) error {
-	if err := c.writeBuffer(m.Body); err != nil {
+func (c *console) Publish(_ context.Context, m consumer.Message) error {
+	if err := c.writeBuffer(m.Body()); err != nil {
 		c.logger.Errorf("Unable to publish message to console: %+v", err)
 		return err
 	}

@@ -1,18 +1,25 @@
 package consumer
 
-import "github.com/nsqio/go-nsq"
+import (
+	"github.com/nsqio/go-nsq"
+)
 
 type Pipeline interface {
 	ConnectWith(ClientConfig) (Client, error)
 	Connect() (Client, error)
-	HandleMessage(m *nsq.Message) error
+	HandleMessage(m Message) error
 	Close() error
+}
+
+type Message interface {
+	GetNsqMessage() *nsq.Message
+	Body() []byte
 }
 
 type PipelineConnector = Pipeline
 
 type Client interface {
-	Publish(m *nsq.Message) error
+	Publish(m Message) error
 	Close() error
 }
 

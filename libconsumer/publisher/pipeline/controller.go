@@ -11,7 +11,7 @@ type outputController struct {
 	consumerInfo consumer.Info
 	logger       *logp.Logger
 
-	msgChan   chan *nsq.Message
+	msgChan   chan consumer.Message
 	workQueue workQueue
 
 	consumer *eventConsumer
@@ -32,7 +32,7 @@ type outputWorker interface {
 func newOutputController(
 	consumerInfo consumer.Info,
 	logger *logp.Logger,
-	msgChan chan *nsq.Message,
+	msgChan chan consumer.Message,
 ) *outputController {
 	c := &outputController{
 		consumerInfo: consumerInfo,
@@ -91,7 +91,7 @@ func (c *outputController) Set(outGrp outputs.Group) {
 	// c.consumer.sigContinue()
 }
 
-func (c *outputController) handleMessage(m *nsq.Message) error {
+func (c *outputController) handleMessage(m consumer.Message) error {
 	c.msgChan <- m
 	return nil
 }

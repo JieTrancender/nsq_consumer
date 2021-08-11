@@ -4,7 +4,6 @@ import (
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_to_consumer/libconsumer/outputs"
-	"github.com/nsqio/go-nsq"
 )
 
 type Pipeline struct {
@@ -25,7 +24,7 @@ func New(
 		logger:       logger,
 	}
 
-	msgChan := make(chan *nsq.Message, 1)
+	msgChan := make(chan consumer.Message, 1)
 
 	p.output = newOutputController(consumerInfo, logger, msgChan)
 	p.output.Set(out)
@@ -56,6 +55,6 @@ func (p *Pipeline) ConnectWith(cfg consumer.ClientConfig) (consumer.Client, erro
 	return client, nil
 }
 
-func (p *Pipeline) HandleMessage(m *nsq.Message) error {
+func (p *Pipeline) HandleMessage(m consumer.Message) error {
 	return p.output.handleMessage(m)
 }

@@ -13,6 +13,18 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
+type Consumer struct {
+	opts     *Options
+	cfg      *nsq.Config
+	topic    string
+	consumer *nsq.Consumer
+
+	done    chan struct{}
+	msgChan chan *nsq.Message
+
+	pipeline consumer.PipelineConnector
+}
+
 type NSQConsumer struct {
 	publisher Publisher
 	opts      *Options
@@ -105,7 +117,11 @@ func (nc *NSQConsumer) router() {
 			nc.Close()
 			return
 		case m := <-nc.msgChan:
-			_ = nc.pipeline.HandleMessage(m)
+			_ = nc.pipeline.HandleMessage(&Message{
+				topic:   nc.topic,
+				message: m,
+			})
+			// _ = nc.pipeline.HandleMessage(m)
 		}
 	}
 }

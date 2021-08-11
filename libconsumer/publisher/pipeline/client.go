@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 
-	"github.com/nsqio/go-nsq"
+	"github.com/JieTrancender/nsq_to_consumer/libconsumer/consumer"
 )
 
 type client struct {
@@ -12,7 +12,7 @@ type client struct {
 	done chan struct{}
 }
 
-func (c *client) Publish(m *nsq.Message) error {
+func (c *client) Publish(m consumer.Message) error {
 	fmt.Println("client Publish message", m)
 	return nil
 }
