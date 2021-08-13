@@ -24,9 +24,11 @@ import (
 type Consumer struct {
 	consumer.ConsumerEntity
 
-	Config    consumerConfig
-	RawConfig *common.Config // Raw config that can be unpacked to get Beat specific config data.
-	etcdCli   *clientv3.Client
+	Config       consumerConfig
+	RawConfig    *common.Config // Raw config that can be unpacked to get Beat specific config data.
+	etcdCli      *clientv3.Client
+	watcher      clientv3.Watcher
+	updateConfig func(*common.Config)
 }
 
 type consumerConfig struct {
@@ -77,6 +79,19 @@ func NewConsumer(name, indexPrefix, v string) (*Consumer, error) {
 	}
 
 	return &Consumer{ConsumerEntity: c}, nil
+}
+
+func (c *Consumer) generateConfig(rawConfig *common.Config, configName string) (*common.Config, error) {
+	if rawConfig.HasField(configName) {
+		sub, err := rawConfig.Child(configName, -1)
+		if err != nil {
+			return nil, err
+		}
+
+		return sub, nil
+	}
+
+	return common.NewConfig(), nil
 }
 
 // ConsumerConfig returns config section for this consumer
@@ -180,7 +195,16 @@ func (c *Consumer) configure(settings Settings) error {
 		return fmt.Errorf("error unpacking config data: %v", err)
 	}
 
+	watchStarVer := resp.Header.Revision + 1
+	go c.watchConfig(watchStarVer)
+
 	c.ConsumerEntity.Config = &c.Config.ConsumerConfig
+	c.ConsumerEntity.EtcdConfig = &consumer.EtcdConfig{
+		Endpoints: etcdEndpoints,
+		Username:  etcdUsername,
+		Password:  etcdPassword,
+		Path:      etcdPath,
+	}
 
 	if name := c.Config.Name; name != "" {
 		c.Info.Name = name
@@ -230,6 +254,8 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 		return err
 	}
 
+	c.updateConfig = consumer.UpdateConfig
+
 	// If there are other service, using ctx, current is ignored.
 	_, cancel := context.WithCancel(context.Background())
 	var stopConsumer = func() {
@@ -239,9 +265,40 @@ func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
 
 	logp.L().Infof("%s start running.", c.Info.Consumer)
 
-	// 读取并监听配置
-
 	return consumer.Run(&c.ConsumerEntity)
+}
+
+func (c *Consumer) watchConfig(watchStartVer int64) {
+	c.watcher = clientv3.NewWatcher(c.etcdCli)
+	watchChan := c.watcher.Watch(context.Background(), c.ConsumerEntity.EtcdConfig.Path, clientv3.WithRev(watchStartVer))
+	for resp := range watchChan {
+		for _, ev := range resp.Events {
+			if ev.Type == clientv3.EventTypePut {
+				fmt.Printf("watchConfig %s %s %s", ev.Type, string(ev.Kv.Key), string(ev.Kv.Value))
+				config := make(map[string]interface{})
+				err := json.Unmarshal(ev.Kv.Value, &config)
+				if err != nil {
+					logp.L().Errorf("invalid config format: %s %v", string(ev.Kv.Value), err)
+					break
+				}
+
+				var cfg *common.Config
+				cfg, err = common.NewConfigFrom(config)
+				if err != nil {
+					logp.L().Errorf("new common config fail: %v", err)
+					break
+				}
+
+				var consumerConfig *common.Config
+				consumerConfig, err = c.generateConfig(cfg, c.Info.Consumer)
+				if err != nil {
+					logp.L().Errorf("generate consumer config fail: %v", err)
+				}
+
+				c.updateConfig(consumerConfig)
+			}
+		}
+	}
 }
 
 func (c *Consumer) makeOutputFactory(

@@ -11,6 +11,8 @@ type Consumer interface {
 	Run(c *ConsumerEntity) error
 
 	Stop()
+
+	UpdateConfig(*common.Config)
 }
 
 type ConsumerEntity struct {
@@ -20,10 +22,19 @@ type ConsumerEntity struct {
 	Config *ConsumerConfig
 
 	ConsumerConfig *common.Config
+
+	EtcdConfig *EtcdConfig
 }
 
 // ConsumerConfig struct contains the basic configuration of every consumer
 type ConsumerConfig struct {
 	// output/publishing related configurations
 	Output common.ConfigNamespace `config:"output" json:"output"`
+}
+
+type EtcdConfig struct {
+	Endpoints []string
+	Username  string
+	Password  string
+	Path      string
 }
