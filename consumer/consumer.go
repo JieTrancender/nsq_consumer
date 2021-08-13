@@ -91,7 +91,6 @@ func (nc *NSQConsumer) Run(c *consumer.ConsumerEntity) error {
 	}
 
 	nc.pipeline = c.Publisher
-
 	nc.updateTopics(etcdConfig)
 
 	logp.L().Info("NSQConsumer running...")
@@ -110,6 +109,26 @@ func (nc *NSQConsumer) Run(c *consumer.ConsumerEntity) error {
 
 	nc.wg.Wait()
 	return nil
+}
+
+func (nc *NSQConsumer) UpdateConfig(config *common.Config) {
+	etcdConfig := &etcdConfig{}
+	err := config.Unpack(etcdConfig)
+	if err != nil {
+		logp.L().Errorf("UpdateConfig Unpack fail:%v", err)
+		return
+	}
+
+	// close original consumer
+	for topic, consumer := range nc.topics {
+		logp.L().Debugf("close original consumer(%s) when update config", topic)
+		consumer.consumer.Stop()
+		<-consumer.consumer.StopChan
+		nc.wg.Done()
+	}
+
+	nc.topics = make(map[string]*Consumer)
+	nc.updateTopics(etcdConfig)
 }
 
 func (nc *NSQConsumer) updateTopics(etcdConfig *etcdConfig) {
