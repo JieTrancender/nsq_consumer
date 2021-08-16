@@ -16,18 +16,24 @@
         "consumer-type":"nsq"
     },
     "output": {
+        "console": {
+            "enabled": true
+        },
         "nsqd": {
             "nsqd": "127.0.0.1:4150",
             "topic": "dev_test_dup",
             "enabled": false,
             "enabled_topic": true
         },
-        "console": {
-            "enabled": true
+        "elasticsearch": {
+            "enabled": false,
+            "addrs": ["http://127.0.0.1:9200"],
+            "username": "root",
+            "password": "123456"
         }
     },
     "logging": {
-        "level": -1,
+        "level": 0,
         "to_stderr": true
     }
 }
@@ -39,10 +45,10 @@ make clean && ./build/nsq_to_consumer --etcd-endpoints 127.0.0.1:2379 --etcd-use
 ### Output list
 1. console
 2. nsqd
-3. file[todo]
-4. http[todo]
-5. mysql[todo]
-6. elasticsearch[todo]
+3. elasticsearch
+4. file[todo]
+5. http[todo]
+6. mysql[todo]
 
 ### Getting Help
 If you need help or hit an issue, you can make a issue, we will deal it as soon as posibile.
