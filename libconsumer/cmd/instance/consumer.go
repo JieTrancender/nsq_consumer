@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"go.etcd.io/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3"
 
 	"github.com/JieTrancender/nsq_consumer/internal/version"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/common"

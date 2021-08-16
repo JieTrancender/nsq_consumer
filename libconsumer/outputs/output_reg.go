@@ -42,6 +42,7 @@ func Load(
 	factory := FindFactory(name)
 	if factory == nil {
 		// return Group{}, fmt.Errorf("output type %v undefined", name)
+		logp.L().Debugf("output_reg#Load fail, type %s is not exist", name)
 		return Group{}, nil
 	}
 
