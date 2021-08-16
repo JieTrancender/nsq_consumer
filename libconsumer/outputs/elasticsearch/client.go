@@ -2,11 +2,16 @@ package elasticsearch
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/outputs"
+
+	"github.com/jehiah/go-strftime"
 	"github.com/olivere/elastic/v7"
 )
 
@@ -17,7 +22,6 @@ type client struct {
 	// for elasticsearch
 	client    *elastic.Client
 	addrs     []string
-	indexName string
 	indexType string
 	username  string
 	password  string
@@ -30,7 +34,6 @@ func newElasticsearchClient(config *Config) (*client, error) {
 		logger: logp.NewLogger(logSelector),
 		// client:    elasticClient,
 		addrs:     config.Addrs,
-		indexName: config.IndexName,
 		indexType: config.IndexType,
 		username:  config.Username,
 		password:  config.Password,
@@ -64,7 +67,23 @@ func (c *client) Connect() error {
 }
 
 func (c *client) Publish(_ context.Context, m consumer.Message) error {
-	return nil
+	var entry *elastic.IndexService
+	data := make(map[string]interface{})
+	err := json.Unmarshal(m.GetMessageBody(), &data)
+	if err != nil {
+		// entry = c.client.Index().Index(c.indexName).BodyString(string(m.GetMessageBody()))
+		return fmt.Errorf("Unmarshal fail: %v", err)
+	} else {
+		entry = c.client.Index().Index(c.indexName(m.GetTopic())).BodyJson(data)
+	}
+
+	_, err = entry.Do(context.Background())
+	return err
+}
+
+func (c *client) indexName(topic string) string {
+	now := time.Now()
+	return strftime.Format(fmt.Sprintf("%s-%%y.%%m.%%d", topic), now)
 }
 
 func (c *client) String() string {

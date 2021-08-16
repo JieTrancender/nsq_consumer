@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Addrs     []string `config:"addrs"`
-	IndexName string   `config:"nsq_consumer"`
+	IndexName string   `config:"index_name"`
 	IndexType string   `config:"index_type"`
 	Username  string   `config:"username"`
 	Password  string   `config:"password"`
