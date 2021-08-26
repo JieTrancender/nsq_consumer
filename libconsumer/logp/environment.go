@@ -61,6 +61,10 @@ func (v Environment) String() string {
 	}
 }
 
+func (v Environment) Type() string {
+	return "Environment"
+}
+
 // ParseEnvironment returns the environment type by name.
 // The parse is case insensitive.
 // InvalidEnvironment is returned if the environment type is unknown.

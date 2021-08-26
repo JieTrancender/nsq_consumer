@@ -1,6 +1,14 @@
 package consumer
 
-import "time"
+import (
+	"time"
+
+	"github.com/spf13/pflag"
+)
+
+var (
+	channel = pflag.String("channel", "NsqConsumer", "channel name of this nsq consumer")
+)
 
 // Options options for config
 type Options struct {
@@ -24,7 +32,7 @@ func newOptions() *Options {
 	return &Options{
 		LogPrefix:                "[NsqConsumer] ",
 		LogLevel:                 "INFO",
-		Channel:                  "NsqConsumer",
+		Channel:                  *channel,
 		MaxInFlight:              200,
 		OutputDir:                "/tmp",
 		SyncInterval:             30 * time.Second,

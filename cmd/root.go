@@ -17,6 +17,7 @@ func NsqConsumerSettings() instance.Settings {
 	runFlags.String("etcd-path", "/config/nsq_consumer/default", "etcd path")
 	runFlags.String("etcd-username", "root", "etcd username")
 	runFlags.String("etcd-password", "root", "etcd password")
+	runFlags.String("channel", "NsqConsumer", "channel name of this nsqd consumer")
 	return instance.Settings{
 		RunFlags: runFlags,
 		Name:     Name,

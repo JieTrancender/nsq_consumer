@@ -144,7 +144,7 @@ func (c *Consumer) createConsumer(ct consumer.Creator) (consumer.Consumer, error
 
 // handleFlags parses the command line flags
 func (c *Consumer) handleFlags() error {
-	// flag.Parse()
+	// pflag.Parse()
 	return nil
 }
 
