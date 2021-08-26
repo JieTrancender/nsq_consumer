@@ -1,11 +1,11 @@
 package configure
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/JieTrancender/nsq_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -17,9 +17,9 @@ var (
 type environmentVar logp.Environment
 
 func init() {
-	flag.BoolVar(&verbose, "v", false, "Log at INFO level")
-	flag.BoolVar(&toStderr, "e", false, "Log to stderr and disable syslog/file output")
-	flag.Var((*environmentVar)(&environment), "environment", "set environment being ran in")
+	pflag.BoolVar(&verbose, "verbose", false, "Log at INFO level")
+	pflag.BoolVar(&toStderr, "toStderr", false, "Log to stderr and disable syslog/file output")
+	pflag.Var((*environmentVar)(&environment), "environment", "set environment being ran in")
 }
 
 // Logging builds a logp.Config based on the given common.Config and the specified CLI flags.
@@ -58,4 +58,8 @@ func (v *environmentVar) Set(in string) error {
 
 func (v *environmentVar) String() string {
 	return (*logp.Environment)(v).String()
+}
+
+func (v *environmentVar) Type() string {
+	return (*logp.Environment)(v).Type()
 }

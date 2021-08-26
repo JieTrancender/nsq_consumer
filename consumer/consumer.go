@@ -44,11 +44,11 @@ type etcdConfig struct {
 // New creates a new Consumer pointer instance.
 func New(settings instance.Settings) consumer.Creator {
 	return func(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
-		return newConsumer(c, rawConfig)
+		return newConsumer(c, settings, rawConfig)
 	}
 }
 
-func newConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
+func newConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawConfig *common.Config) (consumer.Consumer, error) {
 	consumerType, err := rawConfig.String("consumer-type", -1)
 	if err != nil {
 		return nil, err
@@ -56,21 +56,26 @@ func newConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer
 
 	switch consumerType {
 	case "nsq":
-		return newNSQConsumer(c, rawConfig)
+		return newNSQConsumer(c, settings, rawConfig)
 	default:
 		return nil, fmt.Errorf("consumer name [%s] is invalid", consumerType)
 	}
 }
 
-func newNSQConsumer(c *consumer.ConsumerEntity, rawConfig *common.Config) (consumer.Consumer, error) {
+func newNSQConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawConfig *common.Config) (consumer.Consumer, error) {
 	opts := newOptions()
 	cfg := nsq.NewConfig()
 	cfg.UserAgent = fmt.Sprintf("nsq-consumer/%s go-nsq/%s", version.GetDefaultVersion(), nsq.VERSION)
 	cfg.MaxInFlight = opts.MaxInFlight
 	cfg.DialTimeout = 10 * time.Second
 
-	queue := make(chan *Message)
+	channel, _ := settings.RunFlags.GetString("channel")
+	if rawConfig.HasField(("channel")) {
+		channel, _ = rawConfig.String("channel", -1)
+	}
+	opts.Channel = channel
 
+	queue := make(chan *Message)
 	consumer := &NSQConsumer{
 		done:   make(chan struct{}),
 		opts:   opts,
