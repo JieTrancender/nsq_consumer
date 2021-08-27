@@ -3,9 +3,7 @@ package consumer
 import (
 	"fmt"
 	"sync"
-	"time"
 
-	"github.com/JieTrancender/nsq_consumer/internal/version"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/cmd/instance"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
@@ -56,18 +54,15 @@ func newConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawConf
 
 	switch consumerType {
 	case "nsq":
-		return newNSQConsumer(c, settings, rawConfig)
+		return newNSQConsumer(c, settings, rawConfig, consumerType)
 	default:
 		return nil, fmt.Errorf("consumer name [%s] is invalid", consumerType)
 	}
 }
 
-func newNSQConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawConfig *common.Config) (consumer.Consumer, error) {
+func newNSQConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawConfig *common.Config, consumerType string) (consumer.Consumer, error) {
 	opts := newOptions()
-	cfg := nsq.NewConfig()
-	cfg.UserAgent = fmt.Sprintf("nsq-consumer/%s go-nsq/%s", version.GetDefaultVersion(), nsq.VERSION)
-	cfg.MaxInFlight = opts.MaxInFlight
-	cfg.DialTimeout = 10 * time.Second
+	cfg := newNSQConfig(rawConfig, consumerType)
 
 	channel, _ := settings.RunFlags.GetString("channel")
 	if rawConfig.HasField(("channel")) {
