@@ -23,11 +23,12 @@ type Consumer struct {
 }
 
 type NSQConsumer struct {
-	done   chan struct{}
-	topics map[string]*Consumer
-	wg     sync.WaitGroup
-	opts   *Options
-	cfg    *nsq.Config
+	done         chan struct{}
+	topics       map[string]*Consumer
+	wg           sync.WaitGroup
+	opts         *Options
+	cfg          *nsq.Config
+	consumerType string
 
 	queue chan *Message
 
@@ -72,11 +73,12 @@ func newNSQConsumer(c *consumer.ConsumerEntity, settings instance.Settings, rawC
 
 	queue := make(chan *Message)
 	consumer := &NSQConsumer{
-		done:   make(chan struct{}),
-		opts:   opts,
-		cfg:    cfg,
-		topics: make(map[string]*Consumer),
-		queue:  queue,
+		done:         make(chan struct{}),
+		opts:         opts,
+		cfg:          cfg,
+		topics:       make(map[string]*Consumer),
+		queue:        queue,
+		consumerType: consumerType,
 	}
 	return consumer, nil
 }
@@ -108,6 +110,9 @@ func (nc *NSQConsumer) Run(c *consumer.ConsumerEntity) error {
 }
 
 func (nc *NSQConsumer) UpdateConfig(config *common.Config) {
+	// update nsqd connection config
+	nc.cfg = newNSQConfig(config, nc.consumerType)
+
 	etcdConfig := &etcdConfig{}
 	err := config.Unpack(etcdConfig)
 	if err != nil {
