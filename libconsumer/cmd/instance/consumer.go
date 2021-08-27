@@ -239,6 +239,13 @@ func (c *Consumer) InitWithSettings(settings Settings) error {
 }
 
 func (c *Consumer) launch(settings Settings, ct consumer.Creator) error {
+	// todo: pprof
+	// 优先启动pprof
+	// pprofHandler := http.NewServeMux()
+	// pprofHandler.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	// server := &http.Server{Addr: ":7070", Handler: pprofHandler}
+	// go server.ListenAndServe()
+
 	defer func() {
 		_ = logp.Sync()
 	}()

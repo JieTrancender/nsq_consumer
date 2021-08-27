@@ -72,7 +72,7 @@ func (w *clientWorker) run() {
 	for {
 		select {
 		case <-w.done:
-			w.logger.Info("clientWorker#run accep done signal")
+			w.logger.Info("clientWorker#run accept done signal")
 			return
 		case m := <-w.msgChan:
 			if err := w.client.Publish(context.TODO(), m); err != nil {
