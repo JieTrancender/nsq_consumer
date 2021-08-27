@@ -103,10 +103,6 @@ func (nc *NSQConsumer) Run(c *consumer.ConsumerEntity) error {
 
 	_ = nc.pipeline.Close()
 
-	for _, consumer := range nc.topics {
-		close(consumer.done)
-	}
-
 	nc.wg.Wait()
 	return nil
 }
@@ -166,6 +162,13 @@ func (nc *NSQConsumer) start() {
 func (nc *NSQConsumer) Stop() {
 	logp.L().Info("Stopping nsq consumer")
 
+	// need close consumer first and then close others
+	for _, consumer := range nc.topics {
+		// close(consumer.done)
+		consumer.Close()
+		close(consumer.done)
+	}
+
 	// Stop nsq consumer
 	close(nc.done)
 }
@@ -200,6 +203,7 @@ func newNsqConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *et
 func (c Consumer) HandleMessage(m *nsq.Message) error {
 	m.DisableAutoResponse()
 	c.msgChan <- m
+
 	return nil
 }
 
@@ -207,7 +211,7 @@ func (c *Consumer) router() {
 	for {
 		select {
 		case <-c.done:
-			c.Close()
+			// c.Close()
 			return
 		case m := <-c.msgChan:
 			c.queue <- &Message{
