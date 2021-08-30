@@ -6,6 +6,9 @@ require (
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elastic/go-ucfg v0.8.3
+	github.com/gin-contrib/cors v1.3.1 // indirect
+	github.com/gin-contrib/pprof v1.3.0 // indirect
+	github.com/gin-gonic/gin v1.7.4 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869

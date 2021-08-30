@@ -1,14 +1,26 @@
 package consumer
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"sync"
+
+	_ "net/http/pprof"
 
 	"github.com/JieTrancender/nsq_consumer/libconsumer/cmd/instance"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/common"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/consumer"
 	"github.com/JieTrancender/nsq_consumer/libconsumer/logp"
+	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
+	"github.com/spf13/pflag"
+)
+
+var (
+	httpPort = pflag.Int("http_port", 6080, "http port")
+	isHttp   = pflag.Bool("is_http", false, "whether to enable the HTTP service")
+	runMode  = pflag.String("run_mode", "release", "run mode(debug/release")
 )
 
 type Consumer struct {
@@ -33,6 +45,8 @@ type NSQConsumer struct {
 	queue chan *Message
 
 	pipeline consumer.PipelineConnector
+
+	httpServer *http.Server
 }
 
 type etcdConfig struct {
@@ -96,6 +110,13 @@ func (nc *NSQConsumer) Run(c *consumer.ConsumerEntity) error {
 	nc.updateTopics(etcdConfig)
 
 	logp.L().Info("NSQConsumer running...")
+
+	if *isHttp {
+		gin.SetMode(*runMode)
+		nc.httpServer = newHTTPServer(nc, *httpPort)
+		go nc.httpServer.ListenAndServe()
+		nc.wg.Add(1)
+	}
 
 	go nc.start()
 
@@ -176,6 +197,17 @@ func (nc *NSQConsumer) Stop() {
 
 	// Stop nsq consumer
 	close(nc.done)
+
+	if nc.httpServer != nil {
+		err := nc.httpServer.Shutdown(context.Background())
+		if err != nil {
+			logp.L().Errorf("http server shutdown fail: %v", err)
+			return
+		}
+
+		logp.L().Info("http server shutdown success")
+		nc.wg.Done()
+	}
 }
 
 func newNsqConsumer(opts *Options, topic string, cfg *nsq.Config, etcdConfig *etcdConfig, queue chan *Message) (*Consumer, error) {
