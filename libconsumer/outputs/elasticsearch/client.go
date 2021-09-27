@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -51,8 +52,15 @@ func (c *client) Connect() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	httpClient := &http.Client{}
+	httpClient.Transport = &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+		IdleConnTimeout:     90 * time.Second,
+	}
+
 	c.logger.Debugf("connect: %v", c.addrs)
-	optionFuncs := []elastic.ClientOptionFunc{elastic.SetURL(c.addrs...)}
+	optionFuncs := []elastic.ClientOptionFunc{elastic.SetURL(c.addrs...), elastic.SetHttpClient(httpClient)}
 	if c.username != "" {
 		optionFuncs = append(optionFuncs, elastic.SetBasicAuth(c.username, c.password))
 	}
@@ -78,12 +86,13 @@ func (c *client) Publish(_ context.Context, m consumer.Message) error {
 	}
 
 	_, err = entry.Do(context.Background())
+
 	return err
 }
 
 func (c *client) indexName(topic string) string {
 	now := time.Now()
-	return strftime.Format(fmt.Sprintf("%s-%%y.%%m.%%d", topic), now)
+	return strftime.Format(fmt.Sprintf("%s-%%Y.%%m.%%d", topic), now)
 }
 
 func (c *client) String() string {
