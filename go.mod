@@ -20,4 +20,7 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace google.golang.org/grpc v1.40.0 => google.golang.org/grpc v1.26.0
+replace (
+	github.com/nsqio/go-nsq v1.0.8 => github.com/JieTrancender/go-nsq v1.0.9-0.20210928093927-58a6fbe1fd9a
+	google.golang.org/grpc v1.40.0 => google.golang.org/grpc v1.26.0
+)
